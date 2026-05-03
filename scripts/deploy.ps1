@@ -25,13 +25,12 @@ Import-Module (Join-Path $projectRoot "cameraunlock-core\powershell\ModDeploymen
 $toolsDir = Join-Path $projectRoot "tools"
 $cecilPath = & (Join-Path $scriptDir "ensure-cecil.ps1") -ToolsDir $toolsDir
 
+$buildOutput = Join-Path $projectRoot "src\EternalAfternoonHeadTracking\bin\$Configuration\net48"
 $result = Invoke-DevDeployCecil `
     -GameId 'eternal-afternoon' `
     -GameDisplayName 'Eternal Afternoon' `
-    -ProjectRoot $projectRoot `
-    -ProjectName 'EternalAfternoonHeadTracking' `
+    -BuildOutputPath $buildOutput `
     -ModDllName 'EternalAfternoonHeadTracking.dll' `
-    -Configuration $Configuration `
     -ManagedSubfolder 'Eternal Afternoon_Data\Managed' `
     -ExtraDlls @('CameraUnlock.Core.dll', 'CameraUnlock.Core.Unity.dll') `
     -GivenPath $GivenPath `

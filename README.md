@@ -207,7 +207,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## Credits
 
-- [Klexber](https://store.steampowered.com/app/2263560/Eternal_Afternoon/) - Eternal Afternoon
+- [Alex Klexber](https://store.steampowered.com/app/3924170/Eternal_Afternoon/) - Eternal Afternoon
 - [OpenTrack](https://github.com/opentrack/opentrack) - Head tracking protocol and software
 - [Mono.Cecil](https://github.com/jbevain/cecil) - .NET assembly manipulation (used for install-time IL injection)
 
