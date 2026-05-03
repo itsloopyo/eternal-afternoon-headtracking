@@ -1,0 +1,9 @@
+<Project>
+  <!-- Set UnityEnginePath for all projects including cameraunlock-core submodule projects.
+       Prefers real game DLLs in src/*/libs/ for local dev; falls back to committed
+       ref-libs/ (stub assemblies) for CI builds without the game installed. -->
+  <PropertyGroup Condition="'$(UnityEnginePath)' == ''">
+    <UnityEnginePath Condition="Exists('$(MSBuildThisFileDirectory)src\EternalAfternoonHeadTracking\libs\UnityEngine.CoreModule.dll')">$(MSBuildThisFileDirectory)src\EternalAfternoonHeadTracking\libs</UnityEnginePath>
+    <UnityEnginePath Condition="'$(UnityEnginePath)' == ''">$(MSBuildThisFileDirectory)src\EternalAfternoonHeadTracking\ref-libs</UnityEnginePath>
+  </PropertyGroup>
+</Project>

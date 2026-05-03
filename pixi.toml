@@ -1,0 +1,22 @@
+[workspace]
+name = "eternal-afternoon-head-tracking"
+version = "1.0.0"
+description = "Head tracking mod for Eternal Afternoon with aim decoupling"
+channels = ["conda-forge"]
+platforms = ["win-64"]
+
+[tasks]
+sync = "git submodule update --remote cameraunlock-core"
+setup = "powershell -ExecutionPolicy Bypass -File scripts/setup-libs.ps1"
+restore = { cmd = "dotnet restore src/EternalAfternoonHeadTracking/EternalAfternoonHeadTracking.csproj", depends-on = ["setup"] }
+build = { cmd = "dotnet build src/EternalAfternoonHeadTracking/EternalAfternoonHeadTracking.csproj -c Release", depends-on = ["restore"] }
+# Bump vendored mod-loader copies to latest upstream within pinned range.
+# Manual; commit the result. CI does not run this.
+update-deps = "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/update-deps.ps1"
+install = { cmd = "powershell -ExecutionPolicy Bypass -File scripts/deploy.ps1 Release", depends-on = ["build"] }
+package = { cmd = "powershell -ExecutionPolicy Bypass -File scripts/package-release.ps1", depends-on = ["build"] }
+uninstall = "scripts\\uninstall.cmd"
+vanilla = "powershell -ExecutionPolicy Bypass -File scripts/vanilla.ps1"
+clean = "dotnet clean src/EternalAfternoonHeadTracking/EternalAfternoonHeadTracking.csproj"
+generate-ref-assemblies = { cmd = "powershell -ExecutionPolicy Bypass -File scripts/generate-ref-assemblies.ps1", depends-on = ["setup"] }
+release = "powershell -ExecutionPolicy Bypass -File scripts/release.ps1"

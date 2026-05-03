@@ -1,0 +1,68 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <OutputType>Library</OutputType>
+    <Version>1.0.1</Version>
+    <AssemblyName>EternalAfternoonHeadTracking</AssemblyName>
+    <RootNamespace>EternalAfternoonHeadTracking</RootNamespace>
+    <LangVersion>8.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+    <NoWarn>CS1591</NoWarn>
+  </PropertyGroup>
+
+  <!-- Unity DLL resolution: use local game DLLs (libs/) if available, otherwise committed reference assemblies (ref-libs/) -->
+  <PropertyGroup>
+    <UnityLibsPath Condition="Exists('$(MSBuildThisFileDirectory)libs\UnityEngine.CoreModule.dll')">$(MSBuildThisFileDirectory)libs</UnityLibsPath>
+    <UnityLibsPath Condition="'$(UnityLibsPath)' == ''">$(MSBuildThisFileDirectory)ref-libs</UnityLibsPath>
+  </PropertyGroup>
+
+  <!-- CameraUnlock shared libraries (submodule) -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\cameraunlock-core\csharp\src\CameraUnlock.Core\CameraUnlock.Core.csproj" />
+    <ProjectReference Include="..\..\cameraunlock-core\csharp\src\CameraUnlock.Core.Unity\CameraUnlock.Core.Unity.csproj" />
+  </ItemGroup>
+
+  <!-- Unity DLLs (resolved via UnityLibsPath) -->
+  <ItemGroup>
+    <Reference Include="UnityEngine">
+      <HintPath>$(UnityLibsPath)\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(UnityLibsPath)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(UnityLibsPath)\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>$(UnityLibsPath)\UnityEngine.PhysicsModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>$(UnityLibsPath)\UnityEngine.InputLegacyModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>$(UnityLibsPath)\UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>$(UnityLibsPath)\UnityEngine.UIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(UnityLibsPath)\UnityEngine.UI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="libs\**" />
+    <None Remove="libs\**" />
+  </ItemGroup>
+</Project>

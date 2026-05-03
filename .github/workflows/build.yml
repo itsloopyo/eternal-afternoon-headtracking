@@ -1,0 +1,136 @@
+name: Build
+
+on:
+  push:
+    branches: ['**']
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
+
+jobs:
+  build:
+    name: Build and Validate
+    runs-on: windows-latest
+    if: ${{ !startsWith(github.event.head_commit.message, 'Release v') }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          submodules: true
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Verify Unity reference assemblies
+        shell: pwsh
+        run: |
+          $refLibsDir = "src/EternalAfternoonHeadTracking/ref-libs"
+          if (-not (Test-Path $refLibsDir)) {
+            Write-Host "::error::Unity reference assemblies not found at $refLibsDir"
+            Write-Host "::error::Run 'pixi run generate-ref-assemblies' locally and commit ref-libs/"
+            exit 1
+          }
+
+          $requiredDlls = @("UnityEngine.dll", "UnityEngine.CoreModule.dll")
+          foreach ($dll in $requiredDlls) {
+            if (-not (Test-Path (Join-Path $refLibsDir $dll))) {
+              Write-Host "::error::Required reference assembly missing: $dll"
+              exit 1
+            }
+          }
+          Write-Host "Unity reference assemblies found" -ForegroundColor Green
+
+      - name: Restore dependencies
+        shell: pwsh
+        run: |
+          dotnet restore src/EternalAfternoonHeadTracking/EternalAfternoonHeadTracking.csproj
+
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "::error::Restore failed"
+            exit 1
+          }
+
+      - name: Build Debug
+        shell: pwsh
+        run: |
+          Write-Host "Building debug configuration..." -ForegroundColor Cyan
+          dotnet build src/EternalAfternoonHeadTracking/EternalAfternoonHeadTracking.csproj -c Debug --no-restore
+
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "::error::Debug build failed"
+            exit 1
+          }
+
+          Write-Host "Debug build succeeded" -ForegroundColor Green
+
+      - name: Build Release
+        shell: pwsh
+        run: |
+          Write-Host "Building release configuration..." -ForegroundColor Cyan
+          dotnet build src/EternalAfternoonHeadTracking/EternalAfternoonHeadTracking.csproj -c Release --no-restore
+
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "::error::Release build failed"
+            exit 1
+          }
+
+          Write-Host "Release build succeeded" -ForegroundColor Green
+
+      - name: Verify build outputs
+        shell: pwsh
+        run: |
+          Write-Host "Verifying build outputs..." -ForegroundColor Cyan
+
+          $requiredFiles = @(
+            "src/EternalAfternoonHeadTracking/bin/Release/net48/EternalAfternoonHeadTracking.dll",
+            "src/EternalAfternoonHeadTracking/bin/Debug/net48/EternalAfternoonHeadTracking.dll"
+          )
+
+          $allExist = $true
+          foreach ($file in $requiredFiles) {
+            if (Test-Path $file) {
+              $size = (Get-Item $file).Length / 1KB
+              Write-Host "  $file ($([math]::Round($size, 2)) KB)" -ForegroundColor Green
+            } else {
+              Write-Host "  Missing: $file" -ForegroundColor Red
+              $allExist = $false
+            }
+          }
+
+          if (-not $allExist) {
+            Write-Host "::error::Some build outputs are missing"
+            exit 1
+          }
+
+          Write-Host "All build outputs verified" -ForegroundColor Green
+
+      - name: Package installer
+        shell: pwsh
+        run: |
+          Write-Host "Packaging installer ZIP..." -ForegroundColor Cyan
+          powershell -ExecutionPolicy Bypass -File scripts/package-release.ps1
+
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "::error::Packaging failed"
+            exit 1
+          }
+
+          Write-Host "Package created" -ForegroundColor Green
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: EternalAfternoonHeadTracking-installer
+          path: release/*-installer.zip
+          retention-days: 14
+          if-no-files-found: error
