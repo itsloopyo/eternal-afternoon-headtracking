@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1] - 2026-05-03
+
+### Other
+
+- Add automatic port retry to C++ UdpReceiver
+- Take BuildOutputPath in dev-deploy and add loader/config auto-install
+
 ## [1.0.0] - 2026-04-22
 
 ### Added
