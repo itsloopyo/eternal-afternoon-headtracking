@@ -43,3 +43,6 @@ tools/*.dll
 .DS_Store
 Thumbs.db
 nul
+
+# Nexus mods description
+NEXUS_MODS.md

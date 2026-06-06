@@ -1,6 +1,7 @@
 using CameraUnlock.Core.Data;
 using CameraUnlock.Core.Processing;
 using CameraUnlock.Core.Protocol;
+using CameraUnlock.Core.Unity.Extensions;
 using CameraUnlock.Core.Unity.Tracking;
 using UnityEngine;
 
@@ -155,10 +156,9 @@ namespace EternalAfternoonHeadTracking
                 var rawPos = _receiver.GetLatestPosition();
                 var interpolatedPos = _positionInterpolator.Update(rawPos, dt);
 
-                var headRotQ = new Quat4(headLocal.x, headLocal.y, headLocal.z, headLocal.w);
-                _lastPositionOffset = _positionProcessor.Process(interpolatedPos, headRotQ, dt);
+                _lastPositionOffset = _positionProcessor.Process(interpolatedPos, headLocal.ToQuat4(), dt);
 
-                Vector3 trackingOffset = new Vector3(_lastPositionOffset.X, _lastPositionOffset.Y, _lastPositionOffset.Z);
+                Vector3 trackingOffset = _lastPositionOffset.ToUnity();
                 Vector3 worldOffset = gameRotation * trackingOffset;
                 Vector3 camSpaceOffset = rotViewMatrix.MultiplyVector(worldOffset);
                 rotViewMatrix.m03 -= camSpaceOffset.x;

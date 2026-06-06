@@ -3,6 +3,7 @@ using CameraUnlock.Core.Data;
 using CameraUnlock.Core.Math;
 using CameraUnlock.Core.Processing;
 using CameraUnlock.Core.Protocol;
+using CameraUnlock.Core.Unity.Extensions;
 using UnityEngine;
 
 namespace EternalAfternoonHeadTracking
@@ -98,33 +99,33 @@ namespace EternalAfternoonHeadTracking
             // Hotkey checks: Input.anyKeyDown short-circuits four dictionary lookups on the
             // overwhelming majority of frames where no key transition occurs.
             // Two equivalent binding sets per the project standard: the configurable
-            // nav-cluster key, OR the fixed Ctrl+Shift+<T/Y/G/H> chord.
+            // nav-cluster key, OR the fixed Ctrl+Shift chord from ChordHotkeys.
             if (Input.anyKeyDown)
             {
-                if (Input.GetKeyDown(_config.RecenterKey) || ChordPressed(KeyCode.T))
+                if (ChordHotkeys.IsActionPressed(_config.RecenterKey, ChordHotkeys.RecenterLetter))
                 {
                     Recenter();
                 }
 
-                if (Input.GetKeyDown(_config.ToggleKey) || ChordPressed(KeyCode.Y))
+                if (ChordHotkeys.IsActionPressed(_config.ToggleKey, ChordHotkeys.ToggleLetter))
                 {
                     ToggleTracking();
                 }
 
-                if (Input.GetKeyDown(_config.PositionToggleKey) || ChordPressed(KeyCode.G))
+                if (ChordHotkeys.IsActionPressed(_config.PositionToggleKey, ChordHotkeys.PositionLetter))
                 {
                     CycleTrackingMode();
                 }
 
-                // Yaw mode takes the 4th chord slot (H) per the project's standard action
+                // Yaw mode takes the 4th chord slot per the project's standard action
                 // order (Recenter/Toggle/Position/Yaw). Reticle is a non-standard extra
-                // for this mod and bumps to the 5th slot (U).
-                if (Input.GetKeyDown(_config.YawModeKey) || ChordPressed(KeyCode.H))
+                // for this mod and bumps to the 5th slot.
+                if (ChordHotkeys.IsActionPressed(_config.YawModeKey, ChordHotkeys.FourthToggleLetter))
                 {
                     ToggleYawMode();
                 }
 
-                if (Input.GetKeyDown(_config.ReticleToggleKey) || ChordPressed(KeyCode.U))
+                if (ChordHotkeys.IsActionPressed(_config.ReticleToggleKey, ChordHotkeys.FifthToggleLetter))
                 {
                     _config.ShowReticle = !_config.ShowReticle;
                     if (_cameraHook != null)
@@ -147,14 +148,6 @@ namespace EternalAfternoonHeadTracking
                     Recenter();
                 }
             }
-        }
-
-        private static bool ChordPressed(KeyCode letter)
-        {
-            if (!Input.GetKeyDown(letter)) return false;
-            bool ctrl = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
-            bool shift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-            return ctrl && shift;
         }
 
         private void LateUpdate()
