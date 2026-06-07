@@ -33,6 +33,8 @@ jobs:
 
       - name: Setup pixi
         uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          run-install: false
 
       # Build + package through the SAME command a developer runs locally.
       # The csproj resolves Unity references from the committed ref-libs/ when
