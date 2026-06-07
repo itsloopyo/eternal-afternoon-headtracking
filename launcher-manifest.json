@@ -1,0 +1,29 @@
+{
+  "schema_version": 2,
+  "mod_info": {
+    "name": "EternalAfternoonHeadTracking",
+    "version": "0.0.0",
+    "game_id": "eternal-afternoon"
+  },
+  "strategy": "MonoCecil",
+  "delivery_mode": "manifest",
+
+  "files": [
+    { "source": "mod/EternalAfternoonHeadTracking.dll", "target": "Eternal Afternoon_Data/Managed/EternalAfternoonHeadTracking.dll" },
+    { "source": "mod/CameraUnlock.Core.dll", "target": "Eternal Afternoon_Data/Managed/CameraUnlock.Core.dll" },
+    { "source": "mod/CameraUnlock.Core.Unity.dll", "target": "Eternal Afternoon_Data/Managed/CameraUnlock.Core.Unity.dll" },
+    { "source": "mod/Mono.Cecil.dll", "target": "Eternal Afternoon_Data/Managed/Mono.Cecil.dll" }
+  ],
+
+  "patches": [
+    {
+      "target": "Eternal Afternoon_Data/Managed/Assembly-CSharp.dll",
+      "tool": "tools/BootstrapPatcher.exe",
+      "args": [ "{input}", "{output}" ],
+      "marker": "HeadTracking_Patched_EternalAfternoon_v1"
+    }
+  ],
+
+  "runtime_requirements": [],
+  "dependencies": []
+}

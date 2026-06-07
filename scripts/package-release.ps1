@@ -73,6 +73,25 @@ foreach ($script in @("install.cmd", "uninstall.cmd")) {
     Write-Host "  $script" -ForegroundColor Green
 }
 
+# Stamp launcher-manifest.json with the real release version and drop it at the
+# installer ZIP root. The launcher reads this file to decide how to stage the
+# mod (delivery_mode: manifest -> native deploy).
+$manifestSource = Join-Path $projectRoot "launcher-manifest.json"
+if (-not (Test-Path $manifestSource)) {
+    throw "launcher-manifest.json not found at repo root: $manifestSource"
+}
+$manifestJson = Get-Content $manifestSource -Raw | ConvertFrom-Json
+$manifestJson.mod_info.version = $version
+# Set-Content -Encoding UTF8 on Windows PowerShell 5.1 writes a BOM that strict
+# JSON parsers reject; write through the .NET API with a no-BOM encoder.
+$utf8NoBom = New-Object System.Text.UTF8Encoding $false
+[System.IO.File]::WriteAllText(
+    (Join-Path $ghStagingDir "launcher-manifest.json"),
+    ($manifestJson | ConvertTo-Json -Depth 10),
+    $utf8NoBom
+)
+Write-Host "  launcher-manifest.json (v$version)" -ForegroundColor Green
+
 Copy-SharedBundle -StagingDir $ghStagingDir -CoreRoot (Join-Path $projectRoot 'cameraunlock-core')
 
 # Mod DLLs go into mod/ (Cecil patcher framework convention; install.cmd expects mod/)
@@ -94,8 +113,27 @@ $patcherSource = Join-Path $scriptDir "patcher\BootstrapPatcher.cs"
 if (-not (Test-Path $patcherSource)) {
     throw "Patcher not found: $patcherSource"
 }
+$patcherMain = Join-Path $scriptDir "patcher\PatcherMain.cs"
+if (-not (Test-Path $patcherMain)) {
+    throw "Patcher wrapper not found: $patcherMain"
+}
 Copy-Item $patcherSource -Destination $modDestDir -Force
 Write-Host "  mod/BootstrapPatcher.cs" -ForegroundColor Green
+
+$nativeToolsDir = Join-Path $ghStagingDir "tools"
+New-Item -ItemType Directory -Path $nativeToolsDir -Force | Out-Null
+$csc = Join-Path $env:WINDIR "Microsoft.NET\Framework\v4.0.30319\csc.exe"
+if (-not (Test-Path $csc)) {
+    throw "csc.exe not found at $csc"
+}
+$patcherExe = Join-Path $nativeToolsDir "BootstrapPatcher.exe"
+& $csc /nologo /target:exe /out:$patcherExe /reference:$cecilPath $patcherSource $patcherMain
+if ($LASTEXITCODE -ne 0) {
+    throw "Failed to compile BootstrapPatcher.exe"
+}
+Copy-Item $cecilPath -Destination $nativeToolsDir -Force
+Write-Host "  tools/BootstrapPatcher.exe" -ForegroundColor Green
+Write-Host "  tools/Mono.Cecil.dll" -ForegroundColor Green
 
 # Vendor tree (committed fallback for offline installs). Copy if present.
 if (Test-Path $vendorDir) {

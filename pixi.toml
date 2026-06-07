@@ -8,7 +8,7 @@ platforms = ["win-64"]
 [tasks]
 sync = "git submodule update --remote cameraunlock-core"
 setup = "powershell -ExecutionPolicy Bypass -File scripts/setup-libs.ps1"
-restore = { cmd = "dotnet restore src/EternalAfternoonHeadTracking/EternalAfternoonHeadTracking.csproj", depends-on = ["setup"] }
+restore = "dotnet restore src/EternalAfternoonHeadTracking/EternalAfternoonHeadTracking.csproj"
 build = { cmd = "dotnet build src/EternalAfternoonHeadTracking/EternalAfternoonHeadTracking.csproj -c Release", depends-on = ["restore"] }
 # Bump vendored mod-loader copies to latest upstream within pinned range.
 # Manual; commit the result. CI does not run this.

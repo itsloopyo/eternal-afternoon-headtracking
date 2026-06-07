@@ -24,113 +24,50 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
         with:
-          submodules: true
+          submodules: recursive
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
-      - name: Verify Unity reference assemblies
+      - name: Setup pixi
+        uses: prefix-dev/setup-pixi@v0.8.1
+
+      # Build + package through the SAME command a developer runs locally.
+      # The csproj resolves Unity references from the committed ref-libs/ when
+      # libs/ is absent - no game install or separate bootstrap step required.
+      # No build logic lives in this workflow, so local and CI can't drift.
+      - name: Build and package
+        shell: pwsh
+        run: pixi run package
+
+      # Unzip the installer into a folder so upload-artifact doesn't nest a
+      # zip inside its own zip.
+      - name: Stage installer contents for artifact
         shell: pwsh
         run: |
-          $refLibsDir = "src/EternalAfternoonHeadTracking/ref-libs"
-          if (-not (Test-Path $refLibsDir)) {
-            Write-Host "::error::Unity reference assemblies not found at $refLibsDir"
-            Write-Host "::error::Run 'pixi run generate-ref-assemblies' locally and commit ref-libs/"
+          $zip = Get-ChildItem release/*-installer.zip -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $zip) {
+            Write-Host "::error::No installer ZIP was produced by 'pixi run package'"
             exit 1
           }
+          $dest = "release/artifact-contents"
+          New-Item -ItemType Directory -Path $dest -Force | Out-Null
+          Expand-Archive -Path $zip.FullName -DestinationPath $dest -Force
+          Write-Host "Staged $($zip.Name)" -ForegroundColor Green
 
-          $requiredDlls = @("UnityEngine.dll", "UnityEngine.CoreModule.dll")
-          foreach ($dll in $requiredDlls) {
-            if (-not (Test-Path (Join-Path $refLibsDir $dll))) {
-              Write-Host "::error::Required reference assembly missing: $dll"
-              exit 1
-            }
-          }
-          Write-Host "Unity reference assemblies found" -ForegroundColor Green
-
-      - name: Restore dependencies
+      - name: Compute artifact name from ref
+        id: artifact
         shell: pwsh
         run: |
-          dotnet restore src/EternalAfternoonHeadTracking/EternalAfternoonHeadTracking.csproj
-
-          if ($LASTEXITCODE -ne 0) {
-            Write-Host "::error::Restore failed"
-            exit 1
-          }
-
-      - name: Build Debug
-        shell: pwsh
-        run: |
-          Write-Host "Building debug configuration..." -ForegroundColor Cyan
-          dotnet build src/EternalAfternoonHeadTracking/EternalAfternoonHeadTracking.csproj -c Debug --no-restore
-
-          if ($LASTEXITCODE -ne 0) {
-            Write-Host "::error::Debug build failed"
-            exit 1
-          }
-
-          Write-Host "Debug build succeeded" -ForegroundColor Green
-
-      - name: Build Release
-        shell: pwsh
-        run: |
-          Write-Host "Building release configuration..." -ForegroundColor Cyan
-          dotnet build src/EternalAfternoonHeadTracking/EternalAfternoonHeadTracking.csproj -c Release --no-restore
-
-          if ($LASTEXITCODE -ne 0) {
-            Write-Host "::error::Release build failed"
-            exit 1
-          }
-
-          Write-Host "Release build succeeded" -ForegroundColor Green
-
-      - name: Verify build outputs
-        shell: pwsh
-        run: |
-          Write-Host "Verifying build outputs..." -ForegroundColor Cyan
-
-          $requiredFiles = @(
-            "src/EternalAfternoonHeadTracking/bin/Release/net48/EternalAfternoonHeadTracking.dll",
-            "src/EternalAfternoonHeadTracking/bin/Debug/net48/EternalAfternoonHeadTracking.dll"
-          )
-
-          $allExist = $true
-          foreach ($file in $requiredFiles) {
-            if (Test-Path $file) {
-              $size = (Get-Item $file).Length / 1KB
-              Write-Host "  $file ($([math]::Round($size, 2)) KB)" -ForegroundColor Green
-            } else {
-              Write-Host "  Missing: $file" -ForegroundColor Red
-              $allExist = $false
-            }
-          }
-
-          if (-not $allExist) {
-            Write-Host "::error::Some build outputs are missing"
-            exit 1
-          }
-
-          Write-Host "All build outputs verified" -ForegroundColor Green
-
-      - name: Package installer
-        shell: pwsh
-        run: |
-          Write-Host "Packaging installer ZIP..." -ForegroundColor Cyan
-          powershell -ExecutionPolicy Bypass -File scripts/package-release.ps1
-
-          if ($LASTEXITCODE -ne 0) {
-            Write-Host "::error::Packaging failed"
-            exit 1
-          }
-
-          Write-Host "Package created" -ForegroundColor Green
+          $branch = "${{ github.ref_name }}" -replace '[^A-Za-z0-9._-]', '-'
+          echo "name=EternalAfternoonHeadTracking-$branch" >> $env:GITHUB_OUTPUT
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v7
         with:
-          name: EternalAfternoonHeadTracking-installer
-          path: release/*-installer.zip
+          name: ${{ steps.artifact.outputs.name }}
+          path: release/artifact-contents/
           retention-days: 14
           if-no-files-found: error
