@@ -32,6 +32,18 @@ release/
 # AI tooling
 .claude/
 .millhouse/
+.lab/
+.cursor/
+.windsurf/
+.aider*
+# Machine-generated agent instructions (authoritative sources live in /c/data)
+CLAUDE.md
+AGENTS.md
+# Skills and MCP servers
+skills/
+.mcp.json
+mcp.json
+*.mcp.json
 
 # Installer state (written into game dir by install.cmd, but guard the repo too)
 .headtracking-state.json
