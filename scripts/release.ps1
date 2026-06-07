@@ -23,7 +23,10 @@
 #>
 param(
     [Parameter(Position=0)]
-    [string]$Version = ""
+    [string]$Version = "",
+    # Ship a release even when there are no user-facing commits since the
+    # last tag (writes a maintenance changelog entry instead of aborting).
+    [switch]$Force
 )
 
 Set-StrictMode -Version Latest
@@ -36,6 +39,22 @@ $modSourcePath = Join-Path $projectDir "src\EternalAfternoonHeadTracking\Core\He
 $changelogPath = Join-Path $projectDir "CHANGELOG.md"
 
 Import-Module (Join-Path $projectDir "cameraunlock-core\powershell\ReleaseWorkflow.psm1") -Force
+
+# Mirrors New-ChangelogFromCommits' insertion so a -Force maintenance entry
+# lands in the same place with the same shape.
+function Add-MaintenanceChangelogEntry {
+    param([string]$Path, [string]$NewVersion)
+    $date = Get-Date -Format 'yyyy-MM-dd'
+    $entry = "## [$NewVersion] - $date`n`n### Changed`n`n- Maintenance release (no user-facing changes).`n`n"
+    $changelog = Get-Content $Path -Raw
+    if ($changelog -match '(?s)(# Changelog.*?)(## \[)') {
+        $changelog = $changelog -replace '(?s)(# Changelog.*?\n\n)', "`$1$entry"
+    } else {
+        $changelog = $changelog -replace '(?s)(# Changelog.*?\n)', "`$1$entry"
+    }
+    $changelog = $changelog.TrimEnd() + "`n"
+    Set-Content $Path $changelog -NoNewline
+}
 
 Write-Host "=== Eternal Afternoon Head Tracking Release ===" -ForegroundColor Cyan
 Write-Host ""
@@ -85,30 +104,10 @@ Write-Host "Current version: $currentVersion" -ForegroundColor Gray
 Write-Host "New version:     $Version" -ForegroundColor Green
 Write-Host ""
 
-# Step 3: update canonical version in csproj, then mirror into HeadTrackingMod.cs ModVersion constant
-Write-Host "Updating version in csproj..." -ForegroundColor Cyan
-Set-CsprojVersion $csprojPath $Version
-
-if (Test-Path $modSourcePath) {
-    Write-Host "Updating ModVersion constant in HeadTrackingMod.cs..." -ForegroundColor Cyan
-    $modContent = Get-Content $modSourcePath -Raw
-    $modContent = $modContent -replace 'ModVersion = "[^"]+"', "ModVersion = `"$Version`""
-    $modContent | Set-Content $modSourcePath -NoNewline
-}
-
-# Step 4: build via pixi (ensures vendor refresh + restore + build chain runs)
-Write-Host "Building release (pixi run build)..." -ForegroundColor Cyan
-Push-Location $projectDir
-try {
-    & pixi run build
-    if ($LASTEXITCODE -ne 0) {
-        throw "pixi run build failed with exit code $LASTEXITCODE"
-    }
-} finally {
-    Pop-Location
-}
-
-# Step 5: generate CHANGELOG from commits since last tag
+# Step 3: generate CHANGELOG from commits since last tag. This is the gate
+# that aborts when there are no user-facing commits, so run it BEFORE
+# mutating any version files - a failure here then leaves a clean tree
+# instead of stranding a half-applied version bump with no tag.
 Write-Host "Generating CHANGELOG..." -ForegroundColor Cyan
 $hasExistingTags = git tag -l 2>$null
 if (-not $hasExistingTags) {
@@ -119,17 +118,50 @@ if (-not $hasExistingTags) {
         Write-Host "  Wrote initial CHANGELOG.md" -ForegroundColor Gray
     }
 } else {
-    $changelogArgs = @{
-        ChangelogPath = $changelogPath
-        Version = $Version
-        ArtifactPaths = @(
-            "src/",
-            "cameraunlock-core",
-            "scripts/install.cmd",
-            "scripts/uninstall.cmd"
-        )
+    try {
+        $changelogArgs = @{
+            ChangelogPath = $changelogPath
+            Version = $Version
+            ArtifactPaths = @(
+                "src/",
+                "cameraunlock-core",
+                "scripts/install.cmd",
+                "scripts/uninstall.cmd"
+            )
+        }
+        New-ChangelogFromCommits @changelogArgs | Out-Null
+    } catch {
+        if (-not $Force) {
+            Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
+            Write-Host "No user-facing changes to release. Re-run with -Force for a maintenance release." -ForegroundColor Yellow
+            exit 1
+        }
+        Write-Host "No user-facing commits since last tag - writing maintenance entry (-Force)." -ForegroundColor Yellow
+        Add-MaintenanceChangelogEntry -Path $changelogPath -NewVersion $Version
     }
-    New-ChangelogFromCommits @changelogArgs | Out-Null
+}
+
+# Step 4: update canonical version in csproj, then mirror into HeadTrackingMod.cs ModVersion constant
+Write-Host "Updating version in csproj..." -ForegroundColor Cyan
+Set-CsprojVersion $csprojPath $Version
+
+if (Test-Path $modSourcePath) {
+    Write-Host "Updating ModVersion constant in HeadTrackingMod.cs..." -ForegroundColor Cyan
+    $modContent = Get-Content $modSourcePath -Raw
+    $modContent = $modContent -replace 'ModVersion = "[^"]+"', "ModVersion = `"$Version`""
+    $modContent | Set-Content $modSourcePath -NoNewline
+}
+
+# Step 5: build via pixi (ensures vendor refresh + restore + build chain runs)
+Write-Host "Building release (pixi run build)..." -ForegroundColor Cyan
+Push-Location $projectDir
+try {
+    & pixi run build
+    if ($LASTEXITCODE -ne 0) {
+        throw "pixi run build failed with exit code $LASTEXITCODE"
+    }
+} finally {
+    Pop-Location
 }
 
 # Step 6: commit version bump + changelog
