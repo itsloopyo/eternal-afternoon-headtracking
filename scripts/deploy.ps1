@@ -53,5 +53,12 @@ $result = Invoke-DevDeployCecil `
 Write-DeploymentSuccess `
     -ModName "Head Tracking mod" `
     -DeployPath $result.DeployedDllPath `
-    -RecenterKey "Home" `
-    -ToggleKey "End"
+    -Controls @(
+        "Home      - Recenter head tracking",
+        "End       - Toggle head tracking on/off",
+        "Page Up   - Cycle tracking mode (both / rotation-only / position-only)",
+        "Page Down - Toggle yaw mode (world / local)",
+        "Insert    - Toggle aim reticle on/off",
+        "",
+        "No nav cluster? Chords: Ctrl+Shift+ T=Recenter Y=Toggle G=Mode H=Yaw U=Reticle"
+    )
