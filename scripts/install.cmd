@@ -15,6 +15,7 @@ set "FRAMEWORK_TYPE=MonoCecil"
 set "MANAGED_SUBFOLDER=Eternal Afternoon_Data\Managed"
 set "ASSEMBLY_DLL=Assembly-CSharp.dll"
 set "PATCHER_FILE=BootstrapPatcher.cs"
+set "PATCH_MARKER=HeadTracking_Patched_EternalAfternoon_v1"
 set "MOD_CONTROLS=Controls:&echo   Home      - Recenter head tracking&echo   End       - Toggle head tracking on/off&echo   Insert    - Toggle aim reticle on/off&echo   Page Up   - Cycle tracking mode (both / rotation only / position only)&echo   Page Down - Toggle world/local yaw"
 :: --- END CONFIG BLOCK ---
 
