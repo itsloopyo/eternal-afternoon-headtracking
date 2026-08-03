@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.5] - 2026-08-03
+
+### Fixed
+
+- show full control set in pixi install via shared -Controls
+- recenter via tracker app request instead of on reconnection
+
 ## [0.1.4] - 2026-06-07
 
 ### Other

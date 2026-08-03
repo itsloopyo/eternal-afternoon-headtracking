@@ -15,7 +15,7 @@ namespace EternalAfternoonHeadTracking
     public sealed class HeadTrackingMod : MonoBehaviour
     {
         public const string ModName = "Head Tracking";
-        public const string ModVersion = "0.1.4";
+        public const string ModVersion = "0.1.5";
 
         public static HeadTrackingMod Instance { get; private set; }
 
