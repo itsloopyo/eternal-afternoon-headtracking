@@ -90,6 +90,11 @@ namespace EternalAfternoonHeadTracking
 
         private void Update()
         {
+            if (_receiver.TryConsumeRecenterRequest())
+            {
+                Recenter();
+            }
+
             // Lazy init aim system after game is loaded
             if (!_aimSystemInitialized && _cameraController != null)
             {
@@ -136,17 +141,16 @@ namespace EternalAfternoonHeadTracking
                 }
             }
 
-            // Monitor connection state
+            // Monitor connection state. Connection edges only log: the first-frame
+            // auto-recenter in CameraController covers initial connection, and
+            // reconnection after a tracking-loss gap must not recenter - the user
+            // may not be facing the screen; the tracker app owns re-acquisition
+            // recentering and signals it via the packet trailer.
             bool isConnected = _receiver != null && _receiver.IsReceiving;
             if (isConnected != _wasConnected)
             {
                 _wasConnected = isConnected;
                 Log(isConnected ? "OpenTrack connected" : "OpenTrack disconnected");
-
-                if (isConnected)
-                {
-                    Recenter();
-                }
             }
         }
 
