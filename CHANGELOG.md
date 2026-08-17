@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6] - 2026-08-17
+
+### Fixed
+
+- follow core's per-connection smoothing split
+- match stub member kinds to the shipped Unity assemblies
+
 ## [Unreleased]
 
 ### Fixed
