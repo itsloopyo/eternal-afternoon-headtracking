@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.7] - 2026-08-18
+
+### Fixed
+
+- match stub member kinds to the shipped Unity assemblies
+- compile the uGUI stubs into UnityEngine.UI, not UnityEngine
+
 ## [0.1.6] - 2026-08-17
 
 ### Fixed

@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework>
     <OutputType>Library</OutputType>
-    <Version>0.1.6</Version>
+    <Version>0.1.7</Version>
     <AssemblyName>EternalAfternoonHeadTracking</AssemblyName>
     <RootNamespace>EternalAfternoonHeadTracking</RootNamespace>
     <LangVersion>8.0</LangVersion>
