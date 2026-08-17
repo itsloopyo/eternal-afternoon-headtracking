@@ -13,8 +13,10 @@ $scriptDir   = Split-Path -Parent $MyInvocation.MyCommand.Path
 $projectRoot = Split-Path -Parent $scriptDir
 $libsPath    = Join-Path $projectRoot 'src\EternalAfternoonHeadTracking\libs'
 $stubSource  = Join-Path $libsPath 'UnityStubs.cs'
+$uiStubs     = Join-Path $libsPath 'UnityUIStubs.cs'
 
 if (-not (Test-Path $stubSource)) { throw "UnityStubs.cs not found at $libsPath" }
+if (-not (Test-Path $uiStubs))    { throw "UnityUIStubs.cs not found at $libsPath" }
 
 New-Item -ItemType Directory -Path $libsPath -Force | Out-Null
 
@@ -23,11 +25,15 @@ Write-Host "Bootstrapping build dependencies (no game install required)..." -For
 # Wipe libs/ except the tracked stub source. A stale game DLL left behind would
 # build here and fail on CI, which is exactly the drift this script prevents.
 Get-ChildItem -Path $libsPath -Force |
-    Where-Object { $_.Name -ne 'UnityStubs.cs' } |
+    Where-Object { $_.Name -notin @('UnityStubs.cs', 'UnityUIStubs.cs') } |
     Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
 
 function Build-Stub {
-    param([string]$assemblyName, [string]$compileItem)
+    param([string]$assemblyName, [string]$compileItem, [string[]]$references = @())
+
+    $refItems = ($references | ForEach-Object {
+        "    <Reference Include=`"$([System.IO.Path]::GetFileNameWithoutExtension($_))`"><HintPath>$_</HintPath><Private>false</Private></Reference>"
+    }) -join "`n"
 
     $proj = @"
 <Project Sdk="Microsoft.NET.Sdk">
@@ -40,6 +46,7 @@ function Build-Stub {
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$compileItem" />
+$refItems
   </ItemGroup>
 </Project>
 "@
@@ -55,12 +62,17 @@ function Build-Stub {
 # The module assemblies exist only so the csproj's references resolve.
 Build-Stub 'UnityEngine' 'UnityStubs.cs'
 
+# uGUI ships as its own assembly with no forwarder from UnityEngine.dll, so its
+# stubs have to be compiled into UnityEngine.UI.dll or the emitted typerefs
+# point at an assembly that does not declare them.
+Build-Stub 'UnityEngine.UI' 'UnityUIStubs.cs' @('UnityEngine.dll')
+
 $emptySource = Join-Path $libsPath 'EmptyStub.cs'
 '// Empty stub assembly' | Out-File -FilePath $emptySource -Encoding utf8
 foreach ($m in @(
     'UnityEngine.CoreModule', 'UnityEngine.IMGUIModule', 'UnityEngine.PhysicsModule',
     'UnityEngine.TextRenderingModule', 'UnityEngine.InputLegacyModule',
-    'UnityEngine.UIModule', 'UnityEngine.UI'
+    'UnityEngine.UIModule'
 )) { Build-Stub $m 'EmptyStub.cs' }
 
 Remove-Item $emptySource -ErrorAction SilentlyContinue
