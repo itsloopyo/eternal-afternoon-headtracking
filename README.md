@@ -61,7 +61,7 @@ No special hardware needed - OpenTrack's built-in **neuralnet tracker** uses any
 
 ### Phone App Setup
 
-This mod includes built-in smoothing for network jitter, so you can send directly from your phone on port 4242 without needing OpenTrack on PC.
+This mod smooths network jitter with `RemoteSmoothing` (default 0.15), so you can send directly from your phone on port 4242 without needing OpenTrack on PC.
 
 1. Install an OpenTrack-compatible head tracking app from your phone's app store
 2. Set the output to your PC's IP address on port 4242 (run `ipconfig` to find it)
@@ -116,8 +116,12 @@ PitchSensitivity = 1.0
 RollSensitivity = 1.0
 
 # --- Smoothing ---
-# 0.0 = no smoothing, 1.0 = maximum. Remote connections enforce a minimum of 0.15.
-Smoothing = 0.0
+# Picked per connection from the tracker's source address. Both values
+# cover rotation and position. 0.0 = no smoothing, 1.0 = heavy.
+# LocalSmoothing: tracker running on this machine (loopback).
+# RemoteSmoothing: tracker on a remote device over the network.
+LocalSmoothing = 0.0
+RemoteSmoothing = 0.15
 
 # --- Position Tracking ---
 PositionSensitivityX = 1.0
@@ -149,7 +153,7 @@ Delete the file to reset to defaults.
 - Check firewall isn't blocking UDP port 4242
 
 **Jittery / unstable tracking:**
-- Increase `Smoothing` in `HeadTracking.cfg` (remote connections auto-use 0.15 minimum)
+- Increase `RemoteSmoothing` (phone/network tracker) or `LocalSmoothing` (tracker on this PC) in `HeadTracking.cfg`
 - Reduce sensitivity values in the config
 - Improve lighting for webcam-based tracking
 

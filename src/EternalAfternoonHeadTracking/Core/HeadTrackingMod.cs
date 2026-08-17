@@ -54,7 +54,8 @@ namespace EternalAfternoonHeadTracking
 
             var processor = new TrackingProcessor
             {
-                SmoothingFactor = _config.Smoothing,
+                LocalSmoothing = _config.LocalSmoothing,
+                RemoteSmoothing = _config.RemoteSmoothing,
                 Sensitivity = new SensitivitySettings(
                     _config.YawSensitivity,
                     _config.PitchSensitivity,
@@ -67,10 +68,10 @@ namespace EternalAfternoonHeadTracking
             var positionProcessor = new PositionProcessor
             {
                 TrackerPivotForward = 0.01f,
-                Settings = new PositionSettings(
+                Settings = PositionSettings.Symmetric(
                     _config.PositionSensitivityX, _config.PositionSensitivityY, _config.PositionSensitivityZ,
                     float.MaxValue, float.MaxValue, float.MaxValue, float.MaxValue,
-                    0.15f,
+                    _config.LocalSmoothing, _config.RemoteSmoothing,
                     invertX: _config.InvertPositionX, invertY: _config.InvertPositionY, invertZ: _config.InvertPositionZ
                 )
             };

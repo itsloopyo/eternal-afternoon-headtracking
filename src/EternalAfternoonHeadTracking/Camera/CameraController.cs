@@ -78,13 +78,17 @@ namespace EternalAfternoonHeadTracking
 
             var rawPose = _receiver.GetLatestPose();
 
-            // Always update interpolator to maintain velocity state
-            var interpolated = _interpolator.Update(rawPose, dt);
+            // Sample-rate-to-frame-rate interpolation is gated on receiving data, never on
+            // the smoothing value: LocalSmoothing defaults to 0.0, and a smoothing-based gate
+            // would leave every local user with stepped motion on a high-refresh display.
+            rawPose = _interpolator.Update(rawPose, dt);
 
-            // Use interpolated pose only when smoothing absorbs prediction corrections;
-            // at smoothing=0, interpolation creates visible correction stutters
-            if (_processor.SmoothingFactor >= 0.001f)
-                rawPose = interpolated;
+            // A connection change (local tracker <-> remote device) swaps which smoothing
+            // parameter applies, so refresh the flag every frame from the receiver.
+            bool isRemoteConnection = _receiver.IsRemoteConnection;
+            _processor.IsRemoteConnection = isRemoteConnection;
+            if (_positionProcessor != null)
+                _positionProcessor.IsRemoteConnection = isRemoteConnection;
 
             var processed = _processor.Process(rawPose, dt);
 

@@ -1,5 +1,22 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- Smoothing is now two `HeadTracking.cfg` keys instead of one: `LocalSmoothing`
+  (default 0.0) applies when the tracker runs on this machine, `RemoteSmoothing`
+  (default 0.15) applies when the tracker is a remote device on the network. The
+  value is selected per connection from the packet source address and
+  re-evaluated whenever the connection changes.
+- Removed the `Smoothing` key. Both new keys cover rotation and position, and
+  the hardcoded 0.15 position smoothing is gone with them.
+- Removed the hidden 0.15 baseline smoothing floor. Local users now get
+  zero-latency tracking by default instead of a silently enforced minimum.
+- Sample-rate-to-frame-rate interpolation is no longer gated on the smoothing
+  value, so local users at smoothing 0.0 keep smooth motion on high-refresh
+  displays.
+
 ## [0.1.5] - 2026-08-03
 
 ### Fixed
