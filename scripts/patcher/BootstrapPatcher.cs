@@ -9,6 +9,7 @@ public static class BootstrapPatcher
 {
     private const string PatchMarker = "HeadTracking_Patched_EternalAfternoon_v1";
     private const string BootstrapTypeName = "HeadTrackingBootstrap";
+    private const string InjectedNamespace = "EternalAfternoonHeadTracking";
 
     /// <summary>
     /// Finds a type by full name across all resolved assemblies,
@@ -69,7 +70,7 @@ public static class BootstrapPatcher
 
             // Create bootstrap class with static Initialize method that uses reflection
             var bootstrapType = new TypeDefinition(
-                "EternalAfternoonHeadTracking",
+                InjectedNamespace,
                 BootstrapTypeName,
                 TypeAttributes.NotPublic | TypeAttributes.Class | TypeAttributes.Sealed | TypeAttributes.Abstract,
                 assembly.MainModule.TypeSystem.Object);
@@ -307,7 +308,7 @@ public static class BootstrapPatcher
 
             // Add marker type to prevent double-patching
             var markerType = new TypeDefinition(
-                "EternalAfternoonHeadTracking",
+                InjectedNamespace,
                 PatchMarker,
                 TypeAttributes.NotPublic | TypeAttributes.Class,
                 assembly.MainModule.TypeSystem.Object);
@@ -315,6 +316,69 @@ public static class BootstrapPatcher
 
             assembly.Write(assemblyPath);
             Console.WriteLine("  Successfully patched " + Path.GetFileName(assemblyPath));
+            return true;
+        }
+    }
+
+    public static bool UnpatchAssembly(string assemblyPath)
+    {
+        string managedDir = Path.GetDirectoryName(assemblyPath);
+
+        var resolver = new DefaultAssemblyResolver();
+        resolver.AddSearchDirectory(managedDir);
+
+        var readerParams = new ReaderParameters
+        {
+            AssemblyResolver = resolver,
+            ReadWrite = false,
+            InMemory = true
+        };
+
+        byte[] assemblyBytes = File.ReadAllBytes(assemblyPath);
+        using (var memStream = new MemoryStream(assemblyBytes))
+        using (var assembly = AssemblyDefinition.ReadAssembly(memStream, readerParams))
+        {
+            var module = assembly.MainModule;
+
+            bool hasMarker = module.Types.Any(t => t.Name == PatchMarker);
+            bool hasBootstrap = module.Types.Any(t => t.Namespace == InjectedNamespace && t.Name == BootstrapTypeName);
+            if (!hasMarker && !hasBootstrap)
+            {
+                Console.WriteLine("  Assembly is not patched - nothing to unpatch");
+                return true;
+            }
+
+            int removedCalls = 0;
+            foreach (var type in module.Types)
+            {
+                foreach (var method in type.Methods)
+                {
+                    if (!method.HasBody) continue;
+                    var il = method.Body.GetILProcessor();
+                    var toRemove = method.Body.Instructions
+                        .Where(instr => (instr.OpCode == OpCodes.Call || instr.OpCode == OpCodes.Callvirt)
+                            && instr.Operand is MethodReference
+                            && ((MethodReference)instr.Operand).DeclaringType != null
+                            && ((MethodReference)instr.Operand).DeclaringType.Name == BootstrapTypeName)
+                        .ToList();
+                    foreach (var instr in toRemove)
+                    {
+                        il.Remove(instr);
+                        removedCalls++;
+                    }
+                }
+            }
+
+            var removeTypes = module.Types
+                .Where(t => t.Name == PatchMarker
+                    || (t.Namespace == InjectedNamespace && t.Name == BootstrapTypeName))
+                .ToList();
+            foreach (var t in removeTypes)
+                module.Types.Remove(t);
+
+            assembly.Write(assemblyPath);
+            Console.WriteLine("  Unpatched " + Path.GetFileName(assemblyPath)
+                + " (removed " + removedCalls + " bootstrap call(s), " + removeTypes.Count + " type(s))");
             return true;
         }
     }

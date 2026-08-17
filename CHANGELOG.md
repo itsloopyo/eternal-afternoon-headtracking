@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- `pixi run install` no longer silently deploys a stale bootstrap patch. The
+  Cecil deploy did not pass its patch marker to `Invoke-DevDeployCecil`, so the
+  corrupt-backup guard was skipped: once an already-patched assembly had been
+  captured as `Assembly-CSharp.dll.original`, every later deploy restored that
+  patched backup, saw its own marker and reported "already patched - skipping",
+  never applying the current injection. `pixi run uninstall` would also have
+  restored a patched assembly instead of a vanilla one. `BootstrapPatcher` gained
+  `UnpatchAssembly`, wired in as the `-Unpatcher`, so a corrupt backup is
+  repaired in place rather than enshrined.
+
 ### Changed
 
 - Smoothing is now two `HeadTracking.cfg` keys instead of one: `LocalSmoothing`
