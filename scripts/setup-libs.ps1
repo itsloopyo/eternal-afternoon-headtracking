@@ -1,130 +1,70 @@
 #!/usr/bin/env pwsh
 #Requires -Version 5.1
+# Populates src/EternalAfternoonHeadTracking/libs/ for a game-free build.
+# Unity reference stubs are compiled from the checked-in UnityStubs.cs, so a
+# clean checkout builds identically on CI and on a machine without the game.
+# Nothing here reads a game install.
+
 Set-StrictMode -Version Latest
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
 
-$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$scriptDir   = Split-Path -Parent $MyInvocation.MyCommand.Path
 $projectRoot = Split-Path -Parent $scriptDir
-$libsDir = Join-Path $projectRoot "src\EternalAfternoonHeadTracking\libs"
+$libsPath    = Join-Path $projectRoot 'src\EternalAfternoonHeadTracking\libs'
+$stubSource  = Join-Path $libsPath 'UnityStubs.cs'
 
-# --- Game detection (inline, no shared module dependency) ---
-$envVar = "ETERNALAFTERNOON_PATH"
-$steamFolder = "Eternal Afternoon"
-$dataFolder = "Eternal Afternoon_Data"
-$gameExe = "Eternal Afternoon.exe"
+if (-not (Test-Path $stubSource)) { throw "UnityStubs.cs not found at $libsPath" }
 
-$gamePath = $null
+New-Item -ItemType Directory -Path $libsPath -Force | Out-Null
 
-# Check environment variable
-if ($env:ETERNALAFTERNOON_PATH -and (Test-Path (Join-Path $env:ETERNALAFTERNOON_PATH $gameExe))) {
-    $gamePath = $env:ETERNALAFTERNOON_PATH
+Write-Host "Bootstrapping build dependencies (no game install required)..." -ForegroundColor Cyan
+
+# Wipe libs/ except the tracked stub source. A stale game DLL left behind would
+# build here and fail on CI, which is exactly the drift this script prevents.
+Get-ChildItem -Path $libsPath -Force |
+    Where-Object { $_.Name -ne 'UnityStubs.cs' } |
+    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+
+function Build-Stub {
+    param([string]$assemblyName, [string]$compileItem)
+
+    $proj = @"
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>$assemblyName</AssemblyName>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <NoWarn>CS0169;CS0649;CS0067;CS0660;CS0661</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$compileItem" />
+  </ItemGroup>
+</Project>
+"@
+    $projPath = Join-Path $libsPath "Stub_$assemblyName.csproj"
+    $proj | Out-File -FilePath $projPath -Encoding utf8
+    dotnet build $projPath -c Release -o $libsPath --nologo -v q
+    if ($LASTEXITCODE -ne 0) { throw "Failed to build stub $assemblyName" }
+    Remove-Item $projPath -ErrorAction SilentlyContinue
+    Write-Host "  Stub: $assemblyName.dll" -ForegroundColor Gray
 }
 
-# Check default Steam locations
-if (-not $gamePath) {
-    $steamPaths = @()
+# Every stubbed type lives in UnityStubs.cs and therefore in UnityEngine.dll.
+# The module assemblies exist only so the csproj's references resolve.
+Build-Stub 'UnityEngine' 'UnityStubs.cs'
 
-    # Registry-based Steam detection
-    $regPath = Get-ItemProperty -Path "HKLM:\SOFTWARE\WOW6432Node\Valve\Steam" -Name "InstallPath" -ErrorAction SilentlyContinue
-    if (-not $regPath) {
-        $regPath = Get-ItemProperty -Path "HKLM:\SOFTWARE\Valve\Steam" -Name "InstallPath" -ErrorAction SilentlyContinue
-    }
-    if ($regPath) {
-        $steamPaths += $regPath.InstallPath
-    }
+$emptySource = Join-Path $libsPath 'EmptyStub.cs'
+'// Empty stub assembly' | Out-File -FilePath $emptySource -Encoding utf8
+foreach ($m in @(
+    'UnityEngine.CoreModule', 'UnityEngine.IMGUIModule', 'UnityEngine.PhysicsModule',
+    'UnityEngine.TextRenderingModule', 'UnityEngine.InputLegacyModule',
+    'UnityEngine.UIModule', 'UnityEngine.UI'
+)) { Build-Stub $m 'EmptyStub.cs' }
 
-    # Parse libraryfolders.vdf for additional library paths
-    foreach ($sp in $steamPaths) {
-        $vdfFile = Join-Path $sp "steamapps\libraryfolders.vdf"
-        if (Test-Path $vdfFile) {
-            $vdfContent = Get-Content $vdfFile -Raw
-            $matches = [regex]::Matches($vdfContent, '"path"\s+"([^"]+)"')
-            foreach ($m in $matches) {
-                $libPath = $m.Groups[1].Value -replace '\\\\', '\'
-                if ($libPath -notin $steamPaths) {
-                    $steamPaths += $libPath
-                }
-            }
-        }
-    }
+Remove-Item $emptySource -ErrorAction SilentlyContinue
+Remove-Item (Join-Path $libsPath '*.deps.json') -Force -ErrorAction SilentlyContinue
+Remove-Item (Join-Path $libsPath '*.pdb')        -Force -ErrorAction SilentlyContinue
 
-    foreach ($sp in $steamPaths) {
-        $candidate = Join-Path $sp "steamapps\common\$steamFolder"
-        if (Test-Path (Join-Path $candidate $gameExe)) {
-            $gamePath = $candidate
-            break
-        }
-    }
-}
-
-if (-not $gamePath) {
-    Write-Host "ERROR: Could not find Eternal Afternoon installation." -ForegroundColor Red
-    Write-Host ""
-    Write-Host "Please either:" -ForegroundColor Yellow
-    Write-Host "  1. Set $envVar environment variable to your game folder"
-    Write-Host "  2. Ensure the game is installed via Steam"
-    exit 1
-}
-
-Write-Host "Found game installation at: $gamePath" -ForegroundColor Green
-
-$managedPath = Join-Path $gamePath "$dataFolder\Managed"
-
-if (-not (Test-Path $managedPath)) {
-    Write-Host "ERROR: Managed folder not found at: $managedPath" -ForegroundColor Red
-    Write-Host "The game installation may be corrupted. Try verifying game files in Steam."
-    exit 1
-}
-
-Write-Host "Found Managed folder at: $managedPath" -ForegroundColor Green
-
-# Required DLLs for building the mod
-$requiredDlls = @(
-    "Assembly-CSharp.dll",
-    "UnityEngine.dll",
-    "UnityEngine.CoreModule.dll",
-    "UnityEngine.IMGUIModule.dll",
-    "UnityEngine.PhysicsModule.dll",
-    "UnityEngine.InputLegacyModule.dll",
-    "UnityEngine.TextRenderingModule.dll",
-    "UnityEngine.UIModule.dll",
-    "UnityEngine.UI.dll"
-)
-
-# Check if all libs already exist and are up-to-date
-$stale = @($requiredDlls | Where-Object {
-    $dest = Join-Path $libsDir $_
-    $src = Join-Path $managedPath $_
-    -not (Test-Path $dest) -or (Get-Item $src).LastWriteTime -gt (Get-Item $dest).LastWriteTime
-})
-
-if ((Test-Path $libsDir) -and $stale.Count -eq 0) {
-    Write-Host "All libs are up-to-date, skipping copy." -ForegroundColor Green
-    exit 0
-}
-
-# Create libs directory if it doesn't exist
-if (-not (Test-Path $libsDir)) {
-    New-Item -ItemType Directory -Path $libsDir -Force | Out-Null
-    Write-Host "Created libs directory: $libsDir" -ForegroundColor Green
-}
-
-# Copy each required DLL
-$copyCount = 0
-foreach ($dll in $requiredDlls) {
-    $sourcePath = Join-Path $managedPath $dll
-    $destPath = Join-Path $libsDir $dll
-
-    if (-not (Test-Path $sourcePath)) {
-        Write-Host "ERROR: Required DLL not found: $sourcePath" -ForegroundColor Red
-        exit 1
-    }
-
-    Copy-Item -Path $sourcePath -Destination $destPath -Force
-    Write-Host "Copied: $dll" -ForegroundColor Cyan
-    $copyCount++
-}
-
-Write-Host ""
-Write-Host "SUCCESS: Copied $copyCount DLLs to libs/" -ForegroundColor Green
-Write-Host "You can now build the project with: pixi run build"
+Write-Host "Build dependencies ready." -ForegroundColor Green

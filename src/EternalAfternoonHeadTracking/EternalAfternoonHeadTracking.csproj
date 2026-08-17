@@ -13,10 +13,10 @@
     <NoWarn>CS1591</NoWarn>
   </PropertyGroup>
 
-  <!-- Unity DLL resolution: use local game DLLs (libs/) if available, otherwise committed reference assemblies (ref-libs/) -->
+  <!-- Unity references resolve to the stubs scripts/setup-libs.ps1 compiles from
+       the checked-in UnityStubs.cs. No game install is read at build time. -->
   <PropertyGroup>
-    <UnityLibsPath Condition="Exists('$(MSBuildThisFileDirectory)libs\UnityEngine.CoreModule.dll')">$(MSBuildThisFileDirectory)libs</UnityLibsPath>
-    <UnityLibsPath Condition="'$(UnityLibsPath)' == ''">$(MSBuildThisFileDirectory)ref-libs</UnityLibsPath>
+    <UnityLibsPath>$(MSBuildThisFileDirectory)libs</UnityLibsPath>
   </PropertyGroup>
 
   <!-- CameraUnlock shared libraries (submodule) -->
