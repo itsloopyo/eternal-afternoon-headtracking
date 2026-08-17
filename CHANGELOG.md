@@ -2,6 +2,11 @@
 
 ## [0.1.8] - 2026-08-18
 
+### Fixed
+
+- Build the Unity reference stubs before compiling, so a clean checkout (and CI)
+  builds without a game install
+
 ### Changed
 
 - Performance and stability improvements

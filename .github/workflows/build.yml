@@ -37,8 +37,8 @@ jobs:
           run-install: false
 
       # Build + package through the SAME command a developer runs locally.
-      # The csproj resolves Unity references from the committed ref-libs/ when
-      # libs/ is absent - no game install or separate bootstrap step required.
+      # The pixi task chain compiles the Unity reference stubs from the
+      # checked-in stub source first, so no game install is needed.
       # No build logic lives in this workflow, so local and CI can't drift.
       - name: Build and package
         shell: pwsh

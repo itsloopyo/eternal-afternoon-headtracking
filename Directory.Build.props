@@ -1,9 +1,10 @@
 <Project>
-  <!-- Set UnityEnginePath for all projects including cameraunlock-core submodule projects.
-       Prefers real game DLLs in src/*/libs/ for local dev; falls back to committed
-       ref-libs/ (stub assemblies) for CI builds without the game installed. -->
+  <!-- Set UnityEnginePath for all projects including cameraunlock-core submodule
+       projects. It points at the stub assemblies scripts/setup-libs.ps1 compiles
+       from the checked-in UnityStubs.cs, so a clean checkout builds without a
+       game install. Building against a real game install is an explicit
+       -p:UnityEnginePath=... opt-in. -->
   <PropertyGroup Condition="'$(UnityEnginePath)' == ''">
-    <UnityEnginePath Condition="Exists('$(MSBuildThisFileDirectory)src\EternalAfternoonHeadTracking\libs\UnityEngine.CoreModule.dll')">$(MSBuildThisFileDirectory)src\EternalAfternoonHeadTracking\libs</UnityEnginePath>
-    <UnityEnginePath Condition="'$(UnityEnginePath)' == ''">$(MSBuildThisFileDirectory)src\EternalAfternoonHeadTracking\ref-libs</UnityEnginePath>
+    <UnityEnginePath>$(MSBuildThisFileDirectory)src\EternalAfternoonHeadTracking\libs</UnityEnginePath>
   </PropertyGroup>
 </Project>

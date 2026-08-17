@@ -6,9 +6,6 @@ obj/
 # scripts/setup-libs.ps1. Generated, never committed.
 **/libs/*.dll
 
-# Build references are generated from the stub source in libs/UnityStubs.cs.
-**/ref-libs/
-
 # NuGet
 packages/
 *.nupkg

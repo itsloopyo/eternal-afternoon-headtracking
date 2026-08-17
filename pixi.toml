@@ -8,7 +8,7 @@ platforms = ["win-64"]
 [tasks]
 sync = "git submodule update --remote cameraunlock-core"
 setup = "powershell -ExecutionPolicy Bypass -File scripts/setup-libs.ps1"
-restore = "dotnet restore src/EternalAfternoonHeadTracking/EternalAfternoonHeadTracking.csproj"
+restore = { cmd = "dotnet restore src/EternalAfternoonHeadTracking/EternalAfternoonHeadTracking.csproj", depends-on = ["setup"] }
 build = { cmd = "dotnet build src/EternalAfternoonHeadTracking/EternalAfternoonHeadTracking.csproj -c Release", depends-on = ["restore"] }
 # Checks that every member reference the build emits resolves against the
 # assemblies it binds to at runtime. Stub/engine shape drift (a property
@@ -23,5 +23,4 @@ package = { cmd = "powershell -ExecutionPolicy Bypass -File scripts/package-rele
 uninstall = "scripts\\uninstall.cmd"
 vanilla = "powershell -ExecutionPolicy Bypass -File scripts/vanilla.ps1"
 clean = "dotnet clean src/EternalAfternoonHeadTracking/EternalAfternoonHeadTracking.csproj"
-generate-ref-assemblies = { cmd = "powershell -ExecutionPolicy Bypass -File scripts/generate-ref-assemblies.ps1", depends-on = ["setup"] }
 release = "powershell -ExecutionPolicy Bypass -File scripts/release.ps1"
