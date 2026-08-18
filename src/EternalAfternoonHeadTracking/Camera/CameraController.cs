@@ -162,7 +162,12 @@ namespace EternalAfternoonHeadTracking
 
                 _lastPositionOffset = _positionProcessor.Process(interpolatedPos, headLocal.ToQuat4(), dt);
 
-                Vector3 trackingOffset = _lastPositionOffset.ToUnity();
+                // Negative z is the forward lean throughout the pipeline, and the clamp is
+                // built on that. Unity's transform +z is forward, so the flip belongs here,
+                // at the boundary - doing it with InvertZ inverts ahead of the clamp and
+                // hands the forward lean the tight backward budget.
+                Vector3 trackingOffset = new Vector3(
+                    _lastPositionOffset.X, _lastPositionOffset.Y, -_lastPositionOffset.Z);
                 Vector3 worldOffset = gameRotation * trackingOffset;
                 Vector3 camSpaceOffset = rotViewMatrix.MultiplyVector(worldOffset);
                 rotViewMatrix.m03 -= camSpaceOffset.x;

@@ -129,7 +129,7 @@ PositionSensitivityY = 1.0
 PositionSensitivityZ = 1.0
 InvertPositionX = true
 InvertPositionY = false
-InvertPositionZ = true
+InvertTrackerZ = false
 
 # --- Reticle ---
 ShowReticle = true

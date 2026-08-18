@@ -72,7 +72,7 @@ namespace EternalAfternoonHeadTracking
                     _config.PositionSensitivityX, _config.PositionSensitivityY, _config.PositionSensitivityZ,
                     float.MaxValue, float.MaxValue, float.MaxValue, float.MaxValue,
                     _config.LocalSmoothing, _config.RemoteSmoothing,
-                    invertX: _config.InvertPositionX, invertY: _config.InvertPositionY, invertZ: _config.InvertPositionZ
+                    invertX: _config.InvertPositionX, invertY: _config.InvertPositionY, invertZ: _config.InvertTrackerZ
                 )
             };
             var positionInterpolator = new PositionInterpolator();

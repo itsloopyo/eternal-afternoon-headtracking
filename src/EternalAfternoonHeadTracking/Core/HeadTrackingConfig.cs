@@ -43,7 +43,11 @@ namespace EternalAfternoonHeadTracking
         public float PositionSensitivityZ { get; set; } = 1.0f;
         public bool InvertPositionX { get; set; } = true;
         public bool InvertPositionY { get; set; } = false;
-        public bool InvertPositionZ { get; set; } = true;
+        /// Renamed from InvertPositionZ, which every existing config file carries as true.
+        /// It used to double as the flip into Unity's +z-forward space, a job the camera
+        /// controller now does at the engine boundary; left in place it would invert the
+        /// lean. The key has to change so existing files fall back to this default.
+        public bool InvertTrackerZ { get; set; } = false;
 
         // Aim decoupling
         public bool ShowReticle { get; set; } = true;
@@ -153,9 +157,9 @@ namespace EternalAfternoonHeadTracking
                             if (bool.TryParse(value, out bool invY))
                                 config.InvertPositionY = invY;
                             break;
-                        case "invertpositionz":
+                        case "inverttrackerz":
                             if (bool.TryParse(value, out bool invZ))
-                                config.InvertPositionZ = invZ;
+                                config.InvertTrackerZ = invZ;
                             break;
                         case "showreticle":
                             if (bool.TryParse(value, out bool show))
@@ -221,7 +225,7 @@ namespace EternalAfternoonHeadTracking
                     "PositionSensitivityZ = 1.0\n" +
                     "InvertPositionX = true\n" +
                     "InvertPositionY = false\n" +
-                    "InvertPositionZ = true\n" +
+                    "InvertTrackerZ = false\n" +
                     "\n" +
                     "# --- Reticle ---\n" +
                     "ShowReticle = true\n" +
