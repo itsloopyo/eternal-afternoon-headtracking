@@ -29,6 +29,10 @@
 
 ### Fixed
 
+- `HeadTracking_BOOT.log` and `HeadTracking_BOOT_ERROR.log` are now rewritten on
+  every launch instead of being appended to forever, so a log sent in with a bug
+  report only contains the session it describes.
+
 - `pixi run install` no longer silently deploys a stale bootstrap patch. The
   Cecil deploy did not pass its patch marker to `Invoke-DevDeployCecil`, so the
   corrupt-backup guard was skipped: once an already-patched assembly had been
@@ -41,6 +45,13 @@
 
 ### Changed
 
+- Centring is now the tracker app's job alone. Every tracker centres itself, so
+  a centre held by the mod as well sat in series with the tracker's own and the
+  two drifted apart: pressing Center in opentrack left the view parked at the
+  negated drift until the mod was centred too. The mod now applies the tracker
+  pose as absolute. The `Home` hotkey, its `Ctrl+Shift+T` chord and the
+  `RecenterKey` config key are gone, along with the response to a Headcam CENTER
+  press. Centre the view in your tracker app instead.
 - Smoothing is now two `HeadTracking.cfg` keys instead of one: `LocalSmoothing`
   (default 0.0) applies when the tracker runs on this machine, `RemoteSmoothing`
   (default 0.15) applies when the tracker is a remote device on the network. The

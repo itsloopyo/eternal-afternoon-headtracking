@@ -28,7 +28,6 @@ namespace EternalAfternoonHeadTracking
         public float RemoteSmoothing { get; set; } = 0.15f;
 
         // Hotkeys
-        public KeyCode RecenterKey { get; set; } = KeyCode.Home;
         public KeyCode ToggleKey { get; set; } = KeyCode.End;
         public KeyCode PositionToggleKey { get; set; } = KeyCode.PageUp;
         public KeyCode ReticleToggleKey { get; set; } = KeyCode.Insert;
@@ -113,10 +112,6 @@ namespace EternalAfternoonHeadTracking
                             if (TryParseFiniteFloat(value, out float remoteSmoothing))
                                 config.RemoteSmoothing = Math.Max(0f, Math.Min(1f, remoteSmoothing));
                             break;
-                        case "recenterkey":
-                            if (TryParseKeyCode(value, out KeyCode kRecenter)) config.RecenterKey = kRecenter;
-                            else log?.Invoke($"Invalid RecenterKey value '{value}' - using default {config.RecenterKey}");
-                            break;
                         case "togglekey":
                             if (TryParseKeyCode(value, out KeyCode kToggle)) config.ToggleKey = kToggle;
                             else log?.Invoke($"Invalid ToggleKey value '{value}' - using default {config.ToggleKey}");
@@ -195,7 +190,6 @@ namespace EternalAfternoonHeadTracking
                     "\n" +
                     "# --- Keybindings ---\n" +
                     "# See https://docs.unity3d.com/ScriptReference/KeyCode.html for key names\n" +
-                    "RecenterKey = Home\n" +
                     "ToggleKey = End\n" +
                     "PositionToggleKey = PageUp\n" +
                     "ReticleToggleKey = Insert\n" +

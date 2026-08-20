@@ -57,7 +57,7 @@ No special hardware needed - OpenTrack's built-in **neuralnet tracker** uses any
 2. Select your webcam in the tracker settings
 3. Set output to **UDP over network** (`127.0.0.1:4242`)
 4. Start tracking before launching the game
-5. Recenter in OpenTrack via its hotkey, and press **Home** in-game to recenter the mod as needed
+5. Centre the view with OpenTrack's own Center hotkey whenever it drifts - the mod applies whatever the tracker sends
 
 ### Phone App Setup
 
@@ -76,7 +76,6 @@ Two equivalent binding sets - use whichever your keyboard has:
 
 | Action               | Nav-cluster | Chord          |
 |----------------------|-------------|----------------|
-| Recenter view        | `Home`      | `Ctrl+Shift+T` |
 | Toggle head tracking | `End`       | `Ctrl+Shift+Y` |
 | Cycle tracking mode  | `Page Up`   | `Ctrl+Shift+G` |
 | Toggle yaw mode      | `Page Down` | `Ctrl+Shift+H` |
@@ -100,7 +99,6 @@ The mod creates `HeadTracking.cfg` in the game's Managed folder (`Eternal Aftern
 UdpPort = 4242
 
 # --- Keybindings (see https://docs.unity3d.com/ScriptReference/KeyCode.html) ---
-RecenterKey = Home
 ToggleKey = End
 PositionToggleKey = PageUp
 ReticleToggleKey = Insert
@@ -143,14 +141,23 @@ Delete the file to reset to defaults.
 **Mod not loading:**
 - Check `HeadTracking_BOOT.log` in `Eternal Afternoon_Data/Managed/` for bootstrap messages
 - Check `HeadTracking_BOOT_ERROR.log` in your temp folder (`%TEMP%`) for bootstrap errors
-- Check `HeadTracking.log` in the Managed folder for mod errors
+- Check `HeadTracking.log` in the Managed folder for mod errors. This is the
+  main log: it records the port it listened on and an `OpenTrack connected` line
+  the moment the first tracker packet arrives. Send this file when reporting a
+  problem.
 - Verify game files through Steam and re-run `install.cmd`
+
+All three logs are rewritten from scratch on every game launch, so they only ever
+contain the most recent session.
 
 **No tracking response:**
 - Verify OpenTrack is running and outputting data
 - Check UDP port matches (default 4242)
-- Press **End** to enable tracking, **Home** to recenter
+- Press **End** to enable tracking
 - Check firewall isn't blocking UDP port 4242
+
+**View is off-centre:**
+- Centre it in your tracker app: OpenTrack's Center hotkey, or the centre button in your phone app. The mod keeps no centre of its own, it applies whatever pose the tracker sends.
 
 **Jittery / unstable tracking:**
 - Increase `RemoteSmoothing` (phone/network tracker) or `LocalSmoothing` (tracker on this PC) in `HeadTracking.cfg`

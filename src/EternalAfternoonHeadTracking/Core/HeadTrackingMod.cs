@@ -1,4 +1,3 @@
-using System;
 using CameraUnlock.Core.Data;
 using CameraUnlock.Core.Math;
 using CameraUnlock.Core.Processing;
@@ -86,16 +85,11 @@ namespace EternalAfternoonHeadTracking
 
             _isEnabled = true;
 
-            Log($"{ModName} loaded! Port: {_config.UdpPort}, Toggle: {_config.ToggleKey}, Recenter: {_config.RecenterKey}");
+            Log($"{ModName} loaded! Port: {_config.UdpPort}, Toggle: {_config.ToggleKey}");
         }
 
         private void Update()
         {
-            if (_receiver.TryConsumeRecenterRequest())
-            {
-                Recenter();
-            }
-
             // Lazy init aim system after game is loaded
             if (!_aimSystemInitialized && _cameraController != null)
             {
@@ -108,11 +102,6 @@ namespace EternalAfternoonHeadTracking
             // nav-cluster key, OR the fixed Ctrl+Shift chord from ChordHotkeys.
             if (Input.anyKeyDown)
             {
-                if (ChordHotkeys.IsActionPressed(_config.RecenterKey, ChordHotkeys.RecenterLetter))
-                {
-                    Recenter();
-                }
-
                 if (ChordHotkeys.IsActionPressed(_config.ToggleKey, ChordHotkeys.ToggleLetter))
                 {
                     ToggleTracking();
@@ -124,8 +113,8 @@ namespace EternalAfternoonHeadTracking
                 }
 
                 // Yaw mode takes the 4th chord slot per the project's standard action
-                // order (Recenter/Toggle/Position/Yaw). Reticle is a non-standard extra
-                // for this mod and bumps to the 5th slot.
+                // order. Reticle is a non-standard extra for this mod and bumps to the
+                // 5th slot.
                 if (ChordHotkeys.IsActionPressed(_config.YawModeKey, ChordHotkeys.FourthToggleLetter))
                 {
                     ToggleYawMode();
@@ -142,11 +131,8 @@ namespace EternalAfternoonHeadTracking
                 }
             }
 
-            // Monitor connection state. Connection edges only log: the first-frame
-            // auto-recenter in CameraController covers initial connection, and
-            // reconnection after a tracking-loss gap must not recenter - the user
-            // may not be facing the screen; the tracker app owns re-acquisition
-            // recentering and signals it via the packet trailer.
+            // Monitor connection state. Connection edges only log: the tracker app
+            // owns centring, and the mod applies what it sends as absolute.
             bool isConnected = _receiver != null && _receiver.IsReceiving;
             if (isConnected != _wasConnected)
             {
@@ -208,17 +194,6 @@ namespace EternalAfternoonHeadTracking
             }
 
             _aimSystemInitialized = true;
-        }
-
-        public void Recenter()
-        {
-            if (_cameraController == null)
-            {
-                throw new InvalidOperationException("Cannot recenter: CameraController not initialized. Mod initialization failed.");
-            }
-
-            _cameraController.Recenter();
-            Log("Recentered");
         }
 
         public void ToggleTracking()

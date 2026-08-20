@@ -10,7 +10,7 @@ namespace EternalAfternoonHeadTracking
     /// <summary>
     /// Applies head tracking rotation to the game camera additively.
     /// Rotation is applied on top of existing Cinemachine look to preserve normal controls.
-    /// Delegates to shared TrackingProcessor (sensitivity, recenter, smoothing, deadzone)
+    /// Delegates to shared TrackingProcessor (sensitivity, smoothing, deadzone)
     /// and PoseInterpolator (inter-sample interpolation).
     /// </summary>
     public sealed class CameraController
@@ -22,7 +22,6 @@ namespace EternalAfternoonHeadTracking
         private readonly PositionInterpolator _positionInterpolator;
 
         private Vec3 _lastPositionOffset;
-        private bool _hasCentered;
 
         /// <summary>Whether positional tracking is enabled.</summary>
         public bool PositionEnabled { get; set; } = true;
@@ -49,16 +48,6 @@ namespace EternalAfternoonHeadTracking
             _positionInterpolator = positionInterpolator;
         }
 
-        public void Recenter()
-        {
-            var rawPose = _receiver.GetLatestPose();
-            _processor.RecenterTo(rawPose);
-            _interpolator.Reset();
-            _positionProcessor?.SetCenter(_receiver.GetLatestPosition());
-            _positionInterpolator?.Reset();
-            _lastPositionOffset = Vec3.Zero;
-        }
-
         /// <summary>
         /// Applies head tracking rotation to the specified camera.
         /// Called by CameraTrackingHook.OnPreCull() with the hook's camera.
@@ -66,13 +55,6 @@ namespace EternalAfternoonHeadTracking
         public void ApplyTracking(Camera camera)
         {
             if (camera == null) return;
-
-            // Auto-recenter on first valid frame
-            if (!_hasCentered)
-            {
-                _hasCentered = true;
-                Recenter();
-            }
 
             float dt = Time.deltaTime;
 
