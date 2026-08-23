@@ -11,7 +11,7 @@ An unofficial, flatscreen head tracking mod for Eternal Afternoon - no VR headse
 
 ## Requirements
 
-- [Eternal Afternoon](https://store.steampowered.com/app/2263560/Eternal_Afternoon/) (Steam)
+- [Eternal Afternoon](https://store.steampowered.com/app/3924170/Eternal_Afternoon/) (Steam)
 - [OpenTrack](https://github.com/opentrack/opentrack) or a compatible head tracking app (smartphone, webcam, or dedicated hardware)
 - Windows 10/11 (64-bit)
 
@@ -37,7 +37,6 @@ If you prefer to place files by hand, or you grabbed the `-nexus` package:
    - `EternalAfternoonHeadTracking.dll`
    - `CameraUnlock.Core.dll`
    - `CameraUnlock.Core.Unity.dll`
-   - `Mono.Cecil.dll`
 3. Configure your tracker to output UDP to `127.0.0.1:4242`
 4. Launch the game
 

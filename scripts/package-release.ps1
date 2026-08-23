@@ -145,14 +145,16 @@ if (Test-Path $vendorDir) {
     Write-Host "  (vendor/$vendorSlug/ not present - omitted)" -ForegroundColor DarkYellow
 }
 
-# Documentation
-$docFiles = @("README.md", "CHANGELOG.md", "THIRD-PARTY-NOTICES.md", "THIRD-PARTY-NOTICES.txt")
-foreach ($doc in $docFiles) {
+# Documentation. LICENSE and THIRD-PARTY-NOTICES.md are not optional: the ZIP is
+# a binary distribution and every licence behind its payload requires the notice
+# to travel with it, so a missing one fails the build rather than being skipped.
+foreach ($doc in @("LICENSE", "THIRD-PARTY-NOTICES.md", "README.md", "CHANGELOG.md")) {
     $docPath = Join-Path $projectRoot $doc
-    if (Test-Path $docPath) {
-        Copy-Item $docPath -Destination $ghStagingDir -Force
-        Write-Host "  $doc" -ForegroundColor Green
+    if (-not (Test-Path $docPath)) {
+        throw "Required document not found: $doc. Every published ZIP is a binary distribution and must carry it."
     }
+    Copy-Item $docPath -Destination $ghStagingDir -Force
+    Write-Host "  $doc" -ForegroundColor Green
 }
 
 $ghZipName = "EternalAfternoonHeadTracking-v$version-installer.zip"
@@ -198,6 +200,17 @@ if (Test-Path $nexusZipPath) { Remove-Item $nexusZipPath -Force }
 Write-Host ""
 Write-Host "Creating Nexus ZIP..." -ForegroundColor Cyan
 
+# The Nexus ZIP is a binary distribution too: the licences of everything
+# compiled into or bundled with the payload require their notices to travel
+# with it, so LICENSE and THIRD-PARTY-NOTICES.md ship at its root.
+foreach ($noticeDoc in @('LICENSE', 'THIRD-PARTY-NOTICES.md', 'README.md')) {
+    $noticeSrc = Join-Path $projectRoot $noticeDoc
+    if (-not (Test-Path $noticeSrc)) {
+        throw "Required notice file not found: $noticeDoc. Every published ZIP is a binary distribution and must carry it."
+    }
+    Copy-Item $noticeSrc -Destination $nexusStagingDir -Force
+    Write-Host "  $noticeDoc" -ForegroundColor Green
+}
 Push-Location $nexusStagingDir
 try {
     Compress-Archive -Path ".\*" -DestinationPath $nexusZipPath -Force
