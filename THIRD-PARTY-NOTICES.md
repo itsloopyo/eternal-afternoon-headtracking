@@ -1,22 +1,20 @@
 # Third-Party Notices
 
-EternalAfternoonHeadTracking bundles, statically links, or credits the third-party
-components listed below. Each remains the property of its authors and is used
-under its own licence. Where a licence requires the copyright notice, the
-conditions and the disclaimer to accompany a binary distribution, the full text
-is reproduced here verbatim, and this file ships at the root of every release
-archive we publish.
+EternalAfternoonHeadTracking bundles, statically links, or credits the third-party components
+listed below. Each remains the property of its authors and is used under its own
+licence. Where a licence requires the copyright notice, the conditions and the
+disclaimer to accompany a binary distribution, the full text is reproduced here
+verbatim, and this file ships at the root of every release ZIP we publish.
 
-No part of Eternal Afternoon is redistributed by this project. It contains no
-game code, no game assets, no decompiled or disassembled output, and no
-proprietary DLLs. The single piece of material in this repository that belongs
-to the game's author is the demonstration recording described under "Eternal
-Afternoon footage" below, which ships in no release archive.
+This repository contains no Eternal Afternoon code, no extracted game assets,
+no data files and no proprietary DLLs. The one piece of the game's author's work
+kept here is the demonstration recording attributed under "Eternal Afternoon
+footage" below, which ships in no release ZIP.
 
 | Component | Version | Licence | How it ships |
 |-----------|---------|---------|--------------|
-| Mono.Cecil | 0.11.5 | MIT | Bundled verbatim in the installer ZIP; `Mono.Cecil.dll` deployed for install-time patching |
-| cameraunlock-core | 3465659888b2270addac9de0b2a728f59a00360c | MIT | Compiled into `CameraUnlock.Core.dll` / `CameraUnlock.Core.Unity.dll`, shipped in both ZIPs |
+| Mono.Cecil | 0.11.5 | MIT | Bundled verbatim in the installer ZIP |
+| cameraunlock-core | 3465659888b2270addac9de0b2a728f59a00360c | MIT | Compiled into `EternalAfternoonHeadTracking.dll` |
 | OpenTrack | n/a | ISC | Not bundled; UDP protocol interoperability only |
 
 ---
@@ -24,17 +22,12 @@ Afternoon footage" below, which ships in no release archive.
 ## Mono.Cecil
 
 Vendored at `vendor/mono-cecil/`, shipped in the installer ZIP and used as the
-install-time source. Taken from the upstream NuGet package untouched; the
+install-time source. Taken from the upstream release asset untouched; the
 upstream licence file ships beside it at `vendor/mono-cecil/LICENSE`.
-`Mono.Cecil.dll` is extracted from that package and deployed into the game's
-`Managed` folder, because `install.cmd` and `uninstall.cmd` load it from there to
-apply and to reverse the bootstrap injection. The mod itself does not reference
-it at runtime.
 
 - Upstream: https://github.com/jbevain/cecil
-- Package: https://www.nuget.org/packages/Mono.Cecil/0.11.5
-- Version: 0.11.5
-- SHA-256 of `Mono.Cecil.0.11.5.nupkg`: `9cf1706f35b4f209c28da7417608bed7a307621b0f0179c52258af78bc4668d0`
+- Version: `0.11.5`
+- SHA-256: `9cf1706f35b4f209c28da7417608bed7a307621b0f0179c52258af78bc4668d0`
 
 ```
 Copyright (c) 2008 - 2015 Jb Evain
@@ -64,11 +57,9 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## cameraunlock-core
 
-Git submodule at `cameraunlock-core/`, built into `CameraUnlock.Core.dll` and
-`CameraUnlock.Core.Unity.dll` which ship in both release archives. Our own code,
+Git submodule at `cameraunlock-core/`, compiled into `EternalAfternoonHeadTracking.dll`. Our own code,
 MIT licensed, reproduced here so the notices are complete.
 
-- Upstream: https://github.com/itsloopyo/cameraunlock-core
 - Pinned commit: `3465659888b2270addac9de0b2a728f59a00360c`
 
 ```
@@ -101,9 +92,9 @@ SOFTWARE.
 
 Not bundled and not linked. This mod implements the OpenTrack UDP pose datagram
 layout so that OpenTrack (https://github.com/opentrack/opentrack, ISC licence)
-and compatible trackers can drive it. No OpenTrack code, headers or binaries are
-copied, linked or redistributed, so its licence triggers no notice obligation
-here. It is credited because the wire format is its work.
+and compatible trackers can drive it. No OpenTrack code, headers or binaries
+are copied, linked or redistributed, so its licence triggers no notice
+obligation here. It is credited because the wire format is its work.
 
 ---
 
@@ -122,34 +113,38 @@ installation at runtime.
 
 ## Eternal Afternoon footage
 
-- **File:** `assets/readme-clip.gif`
-- **Rights holder:** Alex Klexber, together with the rights holders of any
-  third-party marks visible in frame.
-- **Usage:** a recording of the game running with this mod, captured on a
-  legitimately purchased copy, shown so a reader can see what the mod does
-  before installing it.
-- **Bundled:** no. The packaging scripts copy no part of `assets/`, so it is in
-  neither release archive nor anything the launcher deploys.
+- **File:** `assets/readme-clip.gif`, embedded at the top of `README.md`.
+- **Rights holder:** Eternal Afternoon is copyright (c) Alex Klexber, its
+  developer and publisher, together with the rights holders of any third-party
+  marks visible in frame. The recording is their work, not ours. All we
+  contributed is the camera movement the mod produces.
+- **Usage:** about ten seconds of ordinary play, recorded from the game running
+  with this mod on a legitimately purchased copy, shown so a reader can see what
+  the mod does before installing it. It is not a cutscene, not a trailer and not
+  re-uploaded marketing material.
+- **Bundled:** no. It is kept in this repository only. The packaging scripts copy
+  no part of `assets/`, so it reaches neither release ZIP nor anything the
+  launcher deploys. The README references it by absolute URL so the copy inside a
+  ZIP still resolves.
 - **Licence:** none is granted or implied by this repository. This material is
-  not covered by the MIT licence in `LICENSE`, which says so explicitly. Nothing
-  here permits its reuse. If the rights holder would rather it were not
+  not covered by the MIT licence in `LICENSE`, which says so explicitly, and
+  nothing here permits its reuse. If Alex Klexber would rather it were not
   published, open an issue or reach us on Discord and it comes down.
 
 ---
 
 ## Eternal Afternoon
 
-Eternal Afternoon is the property of Alex Klexber. This mod is an unofficial fan
-project and is not affiliated with, endorsed by or supported by them. Eternal
-Afternoon and all related names, logos, characters and marks are trademarks of
-their respective owners, used here only to identify the game this mod applies
-to. That is nominative use and not a claim of any right in them.
-
-The mod requires a legitimately purchased copy of the game. It circumvents no
-DRM, licence check or anti-cheat. It interoperates with the game by reflecting
-over type and member names at runtime, and by injecting a call to our own
-bootstrap into `Assembly-CSharp.dll` at install time. Those names are recorded
-in our source as plain strings, which are facts about the interface rather than
-expression copied from it, and the installer keeps a `.original` backup so
-uninstalling restores the shipped assembly byte for byte. No decompiled or
-disassembled game code is stored in this repository.
+Eternal Afternoon is the property of Alex Klexber. This mod is an unofficial
+fan project and is not affiliated with, endorsed by or supported by them.
+Eternal Afternoon and all related names, logos, characters and marks are
+trademarks of their respective owners, used here only to identify the game
+this mod applies to. That is nominative use and not a claim of any right in
+them. The mod requires a legitimately purchased copy of the game. It
+circumvents no DRM, licence check or anti-cheat. It interoperates with the
+game by reflecting over type and member names at runtime, and by injecting a
+call to our own bootstrap into `Assembly-CSharp.dll` at install time. Those
+names are recorded in our source as plain strings, which are facts about the
+interface rather than expression copied from it, and the installer keeps a
+`.original` backup so uninstalling restores the shipped assembly byte for
+byte. No decompiled or disassembled game code is stored in this repository.

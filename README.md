@@ -2,6 +2,8 @@
 
 ![Mod GIF](https://raw.githubusercontent.com/itsloopyo/eternal-afternoon-headtracking/main/assets/readme-clip.gif)
 
+*Footage of [Eternal Afternoon](https://store.steampowered.com/app/3924170/Eternal_Afternoon/), copyright (c) Alex Klexber, recorded on a purchased copy with this mod running. Used to show what the mod does; no ownership is claimed and no licence to it is granted. See [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).*
+
 An unofficial, flatscreen head tracking mod for Eternal Afternoon - no VR headset required. Use a webcam, phone, or any OpenTrack-compatible tracker to look around the environment with your head while your aim stays on the mouse.
 
 ## Features

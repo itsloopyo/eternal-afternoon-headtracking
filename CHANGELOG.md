@@ -2,10 +2,22 @@
 
 ## [0.2.0] - 2026-08-20
 
+### Changed
+
+- Centring is now the tracker app's job alone. Every tracker centres itself, so
+  a centre held by the mod as well sat in series with the tracker's own and the
+  two drifted apart: pressing Center in opentrack left the view parked at the
+  negated drift until the mod was centred too. The mod now applies the tracker
+  pose as absolute. The `Home` hotkey, its `Ctrl+Shift+T` chord and the
+  `RecenterKey` config key are gone, along with the response to a Headcam CENTER
+  press. Centre the view in your tracker app instead.
+
 ### Fixed
 
-- restore the forward lean budget; InvertPositionZ becomes InvertTrackerZ
-- drop mod-side centring, the tracker app owns the centre
+- restore the forward lean budget; `InvertPositionZ` becomes `InvertTrackerZ`
+- `HeadTracking_BOOT.log` and `HeadTracking_BOOT_ERROR.log` are now rewritten on
+  every launch instead of being appended to forever, so a log sent in with a bug
+  report only contains the session it describes.
 
 ## [0.1.8] - 2026-08-18
 
@@ -27,38 +39,8 @@
 
 ## [0.1.6] - 2026-08-17
 
-### Fixed
-
-- follow core's per-connection smoothing split
-- match stub member kinds to the shipped Unity assemblies
-
-## [Unreleased]
-
-### Fixed
-
-- `HeadTracking_BOOT.log` and `HeadTracking_BOOT_ERROR.log` are now rewritten on
-  every launch instead of being appended to forever, so a log sent in with a bug
-  report only contains the session it describes.
-
-- `pixi run install` no longer silently deploys a stale bootstrap patch. The
-  Cecil deploy did not pass its patch marker to `Invoke-DevDeployCecil`, so the
-  corrupt-backup guard was skipped: once an already-patched assembly had been
-  captured as `Assembly-CSharp.dll.original`, every later deploy restored that
-  patched backup, saw its own marker and reported "already patched - skipping",
-  never applying the current injection. `pixi run uninstall` would also have
-  restored a patched assembly instead of a vanilla one. `BootstrapPatcher` gained
-  `UnpatchAssembly`, wired in as the `-Unpatcher`, so a corrupt backup is
-  repaired in place rather than enshrined.
-
 ### Changed
 
-- Centring is now the tracker app's job alone. Every tracker centres itself, so
-  a centre held by the mod as well sat in series with the tracker's own and the
-  two drifted apart: pressing Center in opentrack left the view parked at the
-  negated drift until the mod was centred too. The mod now applies the tracker
-  pose as absolute. The `Home` hotkey, its `Ctrl+Shift+T` chord and the
-  `RecenterKey` config key are gone, along with the response to a Headcam CENTER
-  press. Centre the view in your tracker app instead.
 - Smoothing is now two `HeadTracking.cfg` keys instead of one: `LocalSmoothing`
   (default 0.0) applies when the tracker runs on this machine, `RemoteSmoothing`
   (default 0.15) applies when the tracker is a remote device on the network. The
@@ -71,6 +53,19 @@
 - Sample-rate-to-frame-rate interpolation is no longer gated on the smoothing
   value, so local users at smoothing 0.0 keep smooth motion on high-refresh
   displays.
+
+### Fixed
+
+- match stub member kinds to the shipped Unity assemblies
+- `pixi run install` no longer silently deploys a stale bootstrap patch. The
+  Cecil deploy did not pass its patch marker to `Invoke-DevDeployCecil`, so the
+  corrupt-backup guard was skipped: once an already-patched assembly had been
+  captured as `Assembly-CSharp.dll.original`, every later deploy restored that
+  patched backup, saw its own marker and reported "already patched - skipping",
+  never applying the current injection. `pixi run uninstall` would also have
+  restored a patched assembly instead of a vanilla one. `BootstrapPatcher` gained
+  `UnpatchAssembly`, wired in as the `-Unpatcher`, so a corrupt backup is
+  repaired in place rather than enshrined.
 
 ## [0.1.5] - 2026-08-03
 
@@ -156,7 +151,7 @@
 - Add automatic port retry to C++ UdpReceiver
 - Take BuildOutputPath in dev-deploy and add loader/config auto-install
 
-## [1.0.0] - 2026-04-22
+## [0.1.0] - 2026-05-03
 
 ### Added
 
