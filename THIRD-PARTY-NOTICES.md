@@ -14,7 +14,7 @@ footage" below, which ships in no release ZIP.
 | Component | Version | Licence | How it ships |
 |-----------|---------|---------|--------------|
 | Mono.Cecil | 0.11.5 | MIT | Bundled verbatim in the installer ZIP |
-| cameraunlock-core | 1fd2956b1819137f723a552725462ab25c14fa24 | MIT | Compiled into `EternalAfternoonHeadTracking.dll` |
+| cameraunlock-core | b107dc64b6bfe43b25d9c2bf867a6d31ce6b07e0 | MIT | Compiled into `EternalAfternoonHeadTracking.dll` |
 | OpenTrack | n/a | ISC | Not bundled; UDP protocol interoperability only |
 
 ---
@@ -60,7 +60,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 Git submodule at `cameraunlock-core/`, compiled into `EternalAfternoonHeadTracking.dll`. Our own code,
 MIT licensed, reproduced here so the notices are complete.
 
-- Pinned commit: `1fd2956b1819137f723a552725462ab25c14fa24`
+- Pinned commit: `b107dc64b6bfe43b25d9c2bf867a6d31ce6b07e0`
 
 ```
 MIT License
@@ -100,7 +100,7 @@ obligation here. It is credited because the wire format is its work.
 
 ## Unity reference stubs
 
-`src/EternalAfternoonHeadTracking/libs/UnityStubs.cs` and `UnityUIStubs.cs` are
+`cameraunlock-core/csharp/stubs/UnityStubs.cs` and `UnityUIStubs.cs` are
 written by us. They declare the signatures of the Unity and uGUI members this
 mod binds against, with empty or trivially re-derived bodies, so that the
 project compiles on a machine with no game installed. They contain no Unity

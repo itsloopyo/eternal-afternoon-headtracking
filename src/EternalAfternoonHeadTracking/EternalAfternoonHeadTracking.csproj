@@ -13,8 +13,8 @@
     <NoWarn>CS1591</NoWarn>
   </PropertyGroup>
 
-  <!-- Unity references resolve to the stubs scripts/setup-libs.ps1 compiles from
-       the checked-in UnityStubs.cs. No game install is read at build time. -->
+  <!-- Unity references resolve to the stubs `pixi run setup` compiles from the shared
+       sources in cameraunlock-core/csharp/stubs. No game install is read at build time. -->
   <PropertyGroup>
     <UnityLibsPath>$(MSBuildThisFileDirectory)libs</UnityLibsPath>
   </PropertyGroup>

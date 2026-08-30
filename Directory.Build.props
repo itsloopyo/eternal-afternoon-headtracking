@@ -1,8 +1,8 @@
 <Project>
   <!-- Set UnityEnginePath for all projects including cameraunlock-core submodule
-       projects. It points at the stub assemblies scripts/setup-libs.ps1 compiles
-       from the checked-in UnityStubs.cs, so a clean checkout builds without a
-       game install. Building against a real game install is an explicit
+       projects. It points at the stub assemblies `pixi run setup` compiles from
+       the shared sources in cameraunlock-core/csharp/stubs, so a clean checkout
+       builds without a game install. Building against a real game install is an explicit
        -p:UnityEnginePath=... opt-in. -->
   <PropertyGroup Condition="'$(UnityEnginePath)' == ''">
     <UnityEnginePath>$(MSBuildThisFileDirectory)src\EternalAfternoonHeadTracking\libs</UnityEnginePath>

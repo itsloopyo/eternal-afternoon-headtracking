@@ -2,8 +2,8 @@
 bin/
 obj/
 
-# Unity reference stubs, compiled from the tracked UnityStubs.cs by
-# scripts/setup-libs.ps1. Generated, never committed.
+# Unity reference stubs. Generated, never committed - the stub SOURCE lives in
+# cameraunlock-core/csharp/stubs, not here.
 **/libs/*.dll
 
 # NuGet
