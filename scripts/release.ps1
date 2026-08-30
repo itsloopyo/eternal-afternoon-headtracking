@@ -54,6 +54,7 @@ $projectDir = Split-Path -Parent $scriptDir
 $csprojPath = Join-Path $projectDir "src\EternalAfternoonHeadTracking\EternalAfternoonHeadTracking.csproj"
 $modSourcePath = Join-Path $projectDir "src\EternalAfternoonHeadTracking\Core\HeadTrackingMod.cs"
 $changelogPath = Join-Path $projectDir "CHANGELOG.md"
+$installCmdPath = Join-Path $projectDir "scripts\install.cmd"
 
 Import-Module (Join-Path $projectDir "cameraunlock-core\powershell\ReleaseWorkflow.psm1") -Force
 
@@ -169,6 +170,13 @@ if (Test-Path $modSourcePath) {
     $modContent | Set-Content $modSourcePath -NoNewline
 }
 
+# install.cmd's MOD_VERSION is what the install writes into the launcher's
+# state file, which is where the launcher looks to spot a stale install.
+$installCmdContent = Get-Content $installCmdPath -Raw
+if ($installCmdContent -notmatch 'set "MOD_VERSION=[^"]+"') { throw "MOD_VERSION line not found in $installCmdPath" }
+$installCmdContent = $installCmdContent -replace 'set "MOD_VERSION=[^"]+"', "set `"MOD_VERSION=$Version`""
+$installCmdContent | Set-Content $installCmdPath -NoNewline
+
 # Step 5: build via pixi (ensures vendor refresh + restore + build chain runs)
 Write-Host "Building release (pixi run build)..." -ForegroundColor Cyan
 Push-Location $projectDir
@@ -185,6 +193,7 @@ try {
 Write-Host "Committing Release v$Version..." -ForegroundColor Cyan
 git add $csprojPath
 if (Test-Path $modSourcePath) { git add $modSourcePath }
+git add $installCmdPath
 if (Test-Path $changelogPath) { git add $changelogPath }
 git commit -m "Release v$Version"
 if ($LASTEXITCODE -ne 0) {
