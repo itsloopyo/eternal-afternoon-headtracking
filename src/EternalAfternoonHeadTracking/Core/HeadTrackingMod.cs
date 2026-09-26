@@ -1,8 +1,13 @@
+using System;
+using System.IO;
+using CameraUnlock.Core.Config;
 using CameraUnlock.Core.Data;
-using CameraUnlock.Core.Math;
+using CameraUnlock.Core.Input;
 using CameraUnlock.Core.Processing;
 using CameraUnlock.Core.Protocol;
+using CameraUnlock.Core.Tracking;
 using CameraUnlock.Core.Unity.Extensions;
+using EternalAfternoonHeadTracking.Config;
 using UnityEngine;
 
 namespace EternalAfternoonHeadTracking
@@ -18,17 +23,19 @@ namespace EternalAfternoonHeadTracking
 
         public static HeadTrackingMod Instance { get; private set; }
 
-        private enum TrackingMode { Both, RotationOnly, PositionOnly }
-
         private OpenTrackReceiver _receiver;
         private CameraController _cameraController;
         private AimController _aimController;
         private GameCrosshair _gameCrosshair;
         private bool _isEnabled;
-        private TrackingMode _trackingMode = TrackingMode.Both;
+        private TrackingMode _trackingMode;
 
         // Configuration
-        private HeadTrackingConfig _config;
+        private ConfigOwner<HeadTrackingConfigData> _configOwner;
+        private HeadTrackingConfigData _config;
+        private KeyBinding[] _toggleKeys;
+        private KeyBinding[] _cycleTrackingModeKeys;
+        private KeyBinding[] _yawModeKeys;
 
         // State
         private bool _wasConnected;
@@ -43,8 +50,7 @@ namespace EternalAfternoonHeadTracking
             Instance = this;
             Log($"Initializing {ModName} v{ModVersion}...");
 
-            // Load config
-            _config = HeadTrackingConfig.LoadFromFile(HeadTrackingConfig.GetDefaultConfigPath(), Log);
+            LoadConfig();
 
             // Initialize components
             _receiver = new OpenTrackReceiver();
@@ -55,23 +61,21 @@ namespace EternalAfternoonHeadTracking
             {
                 LocalSmoothing = _config.LocalSmoothing,
                 RemoteSmoothing = _config.RemoteSmoothing,
-                Sensitivity = new SensitivitySettings(
-                    _config.YawSensitivity,
-                    _config.PitchSensitivity,
-                    _config.RollSensitivity,
-                    invertYaw: false, invertPitch: false, invertRoll: false
-                ),
+                Sensitivity = SensitivitySettings.Default,
                 Deadzone = DeadzoneSettings.None
             };
             var interpolator = new PoseInterpolator();
             var positionProcessor = new PositionProcessor
             {
                 TrackerPivotForward = 0.01f,
+                // Every build before the canonical config shipped InvertPositionX = true with the
+                // sensitivities at 1 and the other inversions off: the tracker's x arrives mirrored
+                // against Unity's. Folded in here so the view moves as it did at those defaults.
                 Settings = PositionSettings.Symmetric(
-                    _config.PositionSensitivityX, _config.PositionSensitivityY, _config.PositionSensitivityZ,
+                    1f, 1f, 1f,
                     float.MaxValue, float.MaxValue, float.MaxValue, float.MaxValue,
                     _config.LocalSmoothing, _config.RemoteSmoothing,
-                    invertX: _config.InvertPositionX, invertY: _config.InvertPositionY, invertZ: _config.InvertTrackerZ
+                    invertX: true, invertY: false, invertZ: false
                 )
             };
             var positionInterpolator = new PositionInterpolator();
@@ -79,13 +83,72 @@ namespace EternalAfternoonHeadTracking
             {
                 WorldSpaceYaw = _config.WorldSpaceYaw,
             };
+            TrackingMode? mode = TrackingModeChannels.Decode(_config.RotationEnabled, _config.PositionEnabled);
+            if (!mode.HasValue)
+            {
+                throw new InvalidOperationException("the config table let through RotationEnabled=false and PositionEnabled=false");
+            }
+            ApplyTrackingMode(mode.Value);
 
             // Aim system will be initialized lazily in Update() to avoid early init issues
             _aimSystemInitialized = false;
 
-            _isEnabled = true;
+            _isEnabled = _config.EnableOnStartup;
 
-            Log($"{ModName} loaded! Port: {_config.UdpPort}, Toggle: {_config.ToggleKey}");
+            Log($"{ModName} loaded! Port: {_config.UdpPort}, Toggle: {_config.ToggleKeyName}, tracking {(_isEnabled ? "on" : "off")} at startup");
+        }
+
+        /// <summary>
+        /// Settings live in CameraUnlock.ini beside the mod's DLL, read and written by core's config
+        /// owner, with rows set to default following the player's Defaults.ini. HeadTracking.cfg,
+        /// which earlier builds read, is imported once while CameraUnlock.ini is absent and never
+        /// written.
+        /// </summary>
+        private void LoadConfig()
+        {
+            string folder = Path.GetDirectoryName(typeof(HeadTrackingMod).Assembly.Location);
+            if (string.IsNullOrEmpty(folder))
+            {
+                throw new InvalidOperationException(
+                    "Cannot resolve the config folder: Assembly.Location is empty. The mod assembly must be loaded from disk.");
+            }
+
+            _configOwner = new ConfigOwner<HeadTrackingConfigData>(
+                ModConfig.Options(folder, DefaultsFile.PerUser(), message => Log("Config: " + message)));
+            ConfigLoadResult<HeadTrackingConfigData> loaded = _configOwner.Load();
+            foreach (string line in loaded.Log) Log(line);
+            Log("Config: " + loaded.Status);
+            _config = loaded.Config;
+
+            _toggleKeys = ParseKeys("ToggleKey", _config.ToggleKeyName);
+            _cycleTrackingModeKeys = ParseKeys("CycleTrackingModeKey", _config.CycleTrackingModeKeyName);
+            _yawModeKeys = ParseKeys("YawModeKey", _config.YawModeKeyName);
+        }
+
+        // The table's hotkey codec refuses a list KeyBindings cannot read, so a loaded list always parses.
+        private static KeyBinding[] ParseKeys(string row, string keyList)
+        {
+            KeyBinding[] bindings;
+            string error;
+            if (!KeyBindings.TryParse(keyList, out bindings, out error))
+            {
+                throw new InvalidOperationException(row + "=" + keyList + " passed the config table and does not parse: " + error);
+            }
+            return bindings;
+        }
+
+        /// <summary>
+        /// Called after a toggle has applied its new value. A save that fails is logged and the
+        /// session keeps the new value.
+        /// </summary>
+        private void SaveConfig(Action<HeadTrackingConfigData> change)
+        {
+            ConfigSaveResult saved = _configOwner.Save(change);
+            foreach (string line in saved.Log) Log(line);
+            if (saved.Status != ConfigSaveStatus.Saved)
+            {
+                Log("Config not saved (" + saved.Status + "): " + saved.Reason + " The change applies to this session only.");
+            }
         }
 
         private void Update()
@@ -96,38 +159,24 @@ namespace EternalAfternoonHeadTracking
                 InitializeAimSystem();
             }
 
-            // Hotkey checks: Input.anyKeyDown short-circuits four dictionary lookups on the
-            // overwhelming majority of frames where no key transition occurs.
-            // Two equivalent binding sets per the project standard: the configurable
-            // nav-cluster key, OR the fixed Ctrl+Shift chord from ChordHotkeys.
+            // Hotkey checks: Input.anyKeyDown short-circuits the key lookups on the
+            // overwhelming majority of frames where no key transition occurs. Each action
+            // fires on any binding in its key list, the Ctrl+Shift chord included.
             if (Input.anyKeyDown)
             {
-                if (ChordHotkeys.IsActionPressed(_config.ToggleKey, ChordHotkeys.ToggleLetter))
+                if (KeyBindingInput.IsTriggered(_toggleKeys))
                 {
                     ToggleTracking();
                 }
 
-                if (ChordHotkeys.IsActionPressed(_config.PositionToggleKey, ChordHotkeys.PositionLetter))
+                if (KeyBindingInput.IsTriggered(_cycleTrackingModeKeys))
                 {
                     CycleTrackingMode();
                 }
 
-                // Yaw mode takes the 4th chord slot per the project's standard action
-                // order. Reticle is a non-standard extra for this mod and bumps to the
-                // 5th slot.
-                if (ChordHotkeys.IsActionPressed(_config.YawModeKey, ChordHotkeys.FourthToggleLetter))
+                if (KeyBindingInput.IsTriggered(_yawModeKeys))
                 {
                     ToggleYawMode();
-                }
-
-                if (ChordHotkeys.IsActionPressed(_config.ReticleToggleKey, ChordHotkeys.FifthToggleLetter))
-                {
-                    _config.ShowReticle = !_config.ShowReticle;
-                    if (_cameraHook != null)
-                        _cameraHook.ShowReticle = _config.ShowReticle;
-                    if (!_config.ShowReticle)
-                        _gameCrosshair?.ResetPosition();
-                    Log($"Reticle {(_config.ShowReticle ? "shown" : "hidden")}");
                 }
             }
 
@@ -175,7 +224,6 @@ namespace EternalAfternoonHeadTracking
                 _cameraHook = _cachedMainCamera.gameObject.AddComponent<CameraTrackingHook>();
                 _cameraHook.Initialize(_cameraController, _aimController, _gameCrosshair, _receiver);
                 _cameraHook.SetEnabled(_isEnabled);
-                _cameraHook.ShowReticle = _config.ShowReticle;
                 Log($"Attached CameraTrackingHook to camera: {_cachedMainCamera.name}");
             }
         }
@@ -196,6 +244,7 @@ namespace EternalAfternoonHeadTracking
             _aimSystemInitialized = true;
         }
 
+        /// <summary>The master on/off. It changes this session only and never writes the config.</summary>
         public void ToggleTracking()
         {
             _isEnabled = !_isEnabled;
@@ -213,14 +262,36 @@ namespace EternalAfternoonHeadTracking
             }
         }
 
+        /// <summary>
+        /// Rotation and position, then rotation only, then position only. Saved as the
+        /// RotationEnabled/PositionEnabled pair.
+        /// </summary>
         private void CycleTrackingMode()
         {
-            if (_cameraController == null) return;
-
-            _trackingMode = (TrackingMode)(((int)_trackingMode + 1) % 3);
+            TrackingMode next;
             switch (_trackingMode)
             {
-                case TrackingMode.Both:
+                case TrackingMode.RotationAndPosition: next = TrackingMode.RotationOnly; break;
+                case TrackingMode.RotationOnly: next = TrackingMode.PositionOnly; break;
+                default: next = TrackingMode.RotationAndPosition; break;
+            }
+            ApplyTrackingMode(next);
+
+            bool rotationEnabled, positionEnabled;
+            TrackingModeChannels.Encode(next, out rotationEnabled, out positionEnabled);
+            SaveConfig(c =>
+            {
+                c.RotationEnabled = rotationEnabled;
+                c.PositionEnabled = positionEnabled;
+            });
+        }
+
+        private void ApplyTrackingMode(TrackingMode mode)
+        {
+            _trackingMode = mode;
+            switch (mode)
+            {
+                case TrackingMode.RotationAndPosition:
                     _cameraController.RotationEnabled = true;
                     _cameraController.PositionEnabled = true;
                     Log("Tracking mode: rotation + position");
@@ -238,12 +309,13 @@ namespace EternalAfternoonHeadTracking
             }
         }
 
+        /// <summary>World-locked or camera-local yaw. Saved as WorldSpaceYaw.</summary>
         public void ToggleYawMode()
         {
-            if (_cameraController == null) return;
-            _cameraController.WorldSpaceYaw = !_cameraController.WorldSpaceYaw;
-            _config.WorldSpaceYaw = _cameraController.WorldSpaceYaw;
-            Log($"Yaw mode: {(_cameraController.WorldSpaceYaw ? "world-space (horizon-locked)" : "camera-local")}");
+            bool worldSpaceYaw = !_cameraController.WorldSpaceYaw;
+            _cameraController.WorldSpaceYaw = worldSpaceYaw;
+            Log($"Yaw mode: {(worldSpaceYaw ? "world-space (horizon-locked)" : "camera-local")}");
+            SaveConfig(c => c.WorldSpaceYaw = worldSpaceYaw);
         }
 
         private void OnDestroy()

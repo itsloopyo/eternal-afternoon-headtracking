@@ -21,6 +21,10 @@ verify-refs = { cmd = "powershell -ExecutionPolicy Bypass -File cameraunlock-cor
 # The config differential test (tests/config_differential) holds the frozen legacy import to
 # the newest published build's reader over every input the corpus generates.
 test = { cmd = "dotnet test tests/EternalAfternoonHeadTracking.Tests/EternalAfternoonHeadTracking.Tests.csproj -c Release", depends-on = ["build"] }
+# Rewrites config/CameraUnlock.ini from the config table after a change to a row, a comment or
+# a default, then the per_game of launcher-manifest.json's config descriptor. The render test
+# compares the two on every `pixi run test`, so the committed file cannot drift from the code.
+render-config = { cmd = "dotnet test tests/EternalAfternoonHeadTracking.Tests/EternalAfternoonHeadTracking.Tests.csproj -c Release --filter FullyQualifiedName~RenderTests.CommittedFileIsTheRenderedDefaults && node cameraunlock-core/scripts/encode-seed.mjs", env = { CAMERAUNLOCK_RENDER_CONFIG = "write" }, depends-on = ["build"] }
 # Bump vendored mod-loader copies to latest upstream within pinned range.
 # Manual; commit the result. CI does not run this.
 update-deps = "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/update-deps.ps1"
@@ -30,3 +34,5 @@ uninstall = "scripts\\uninstall.cmd"
 vanilla = "powershell -ExecutionPolicy Bypass -File scripts/vanilla.ps1"
 clean = "dotnet clean src/EternalAfternoonHeadTracking/EternalAfternoonHeadTracking.csproj"
 release = "powershell -ExecutionPolicy Bypass -File scripts/release.ps1"
+# Checks the launcher contract against the built installer ZIP, the Nexus ZIP's contents included.
+validate-manifest = "node cameraunlock-core/scripts/validate-manifest.mjs"

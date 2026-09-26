@@ -1,5 +1,36 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- Settings move to `Eternal Afternoon_Data\Managed\CameraUnlock.ini`. Earlier versions of the mod kept these settings in `HeadTracking.cfg`, in the same folder. The first time this version starts and finds no `CameraUnlock.ini`, it reads your settings from `HeadTracking.cfg` and writes them into `CameraUnlock.ini`. It never changes `HeadTracking.cfg`, and does not read it again while `CameraUnlock.ini` exists.
+- A setting that the defaults the README shows set to `default` is written as `default` when the value imported for it equals its default at that start, which is the value `Defaults.ini` gives it, or the built-in value where `Defaults.ini` gives none. It then follows `Defaults.ini`. Every other setting is written with the value imported for it.
+- `RotationEnabled` and `PositionEnabled` are one setting here, the tracking mode, so both are written as `default` or neither is.
+- Comments, and keys the mod never read, are not carried over. Nor are these, where your old file had them:
+  - A sensitivity, scale, deadzone, response curve or axis inversion you changed from its default. Set these in your tracker instead.
+  - Reticle settings, and a key that toggled the reticle.
+- An older version of the mod reads `HeadTracking.cfg` and never reads `CameraUnlock.ini`, so a setting you change after updating is not in `HeadTracking.cfg`.
+- Deleting only `CameraUnlock.ini` makes the next start read `HeadTracking.cfg` again. To go back to the defaults, replace everything in `CameraUnlock.ini` with the defaults the README shows. Every setting they set to `default` then follows `Defaults.ini`.
+- On Linux and macOS without Wine or Proton, this version reads its settings and saves none: it creates no `CameraUnlock.ini`, reads your settings from `HeadTracking.cfg` again at every start while there is no `CameraUnlock.ini`, and a change made in game lasts until the game closes.
+- Setting names follow the other CameraUnlock mods, in sections: `UdpPort` is under `[Network]`, `WorldSpaceYaw` under `[General]`, `LocalSmoothing` and `RemoteSmoothing` under `[Smoothing]`, and the hotkeys under `[Hotkeys]`, where `PositionToggleKey` is now `CycleTrackingModeKey`.
+- Hotkeys are written as key names, and each hotkey lists every key that triggers it, the Ctrl+Shift chord included: `ToggleKey=End, Ctrl+Shift+Y`. The chords can be rebound or removed like any other key. Your `ToggleKey`, `PositionToggleKey` and `YawModeKey` are imported with their chord beside them.
+- A hotkey bound to a plain key no longer fires while Ctrl and Shift are both held, so Ctrl+Shift with that key reaches only a binding that names the chord.
+- The tracking mode (`Page Up`) is saved as the `RotationEnabled` and `PositionEnabled` pair, and the yaw mode (`Page Down`) as `WorldSpaceYaw`, as soon as you change them, so the game starts in the mode you left it in. Earlier versions saved neither and always started in rotation and position with the yaw mode `HeadTracking.cfg` set. `End` still changes the current session only.
+- `uninstall.cmd` leaves `CameraUnlock.ini` and `HeadTracking.cfg` in place. Earlier versions deleted `HeadTracking.cfg`.
+
+### Added
+
+- `EnableOnStartup` under `[General]`: whether head tracking is on when the game starts. It defaults to `true`, which is what every earlier version did.
+- A setting set to `default` in `CameraUnlock.ini` takes its value from `Defaults.ini`, which every head tracking mod that keeps its settings in `CameraUnlock.ini` reads. Head tracking mods that keep their settings in another file do not read it, and neither do earlier versions of this mod. Writing a value in place of `default` changes that setting for this game only. When the mod saves a setting that a hotkey changed in game, it writes the new value in place of `default`, so that setting no longer follows `Defaults.ini` in this game until you set it to `default` again.
+- `Defaults.ini` is `%AppData%\CameraUnlock\Defaults.ini` on Windows; `$XDG_CONFIG_HOME/CameraUnlock/Defaults.ini` on Linux, or `~/.config/CameraUnlock/Defaults.ini` where `XDG_CONFIG_HOME` is not set, under Wine and Proton too; and `~/Library/Application Support/CameraUnlock/Defaults.ini` on macOS. The mod's log, where it writes one, names the file it read.
+- When the mod starts and finds no `Defaults.ini`, it creates one holding the built-in values, unless Windows runs the game as a packaged app, or the game runs on Linux or macOS without Wine or Proton. The mod never changes `Defaults.ini` after that.
+
+### Removed
+
+- The key that toggled the reticle (`ReticleToggleKey`, `Insert` / `Ctrl+Shift+U`), and the reticle settings (`ShowReticle`, `ReticleColor`). The game's crosshair always follows your aim while head tracking moves the view; `ShowReticle = false` used to leave it at the centre of the screen.
+- The sensitivity and axis inversion settings (`YawSensitivity`, `PitchSensitivity`, `RollSensitivity`, `PositionSensitivityX`, `PositionSensitivityY`, `PositionSensitivityZ`, `InvertPositionX`, `InvertPositionY` and `InvertTrackerZ`). Set these in your tracker app instead. With these settings at their shipped defaults the camera moves as it did before: the inverted position x every version shipped is built into the mod now.
+
 ## [0.2.0] - 2026-08-20
 
 ### Changed

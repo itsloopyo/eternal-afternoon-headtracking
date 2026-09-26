@@ -20,16 +20,16 @@ set "MOD_SEED_FILES="
 :: reinstall: paths relative to the game folder, quoted when one holds a space.
 :: Keep the line when it is blank, or the list another mod's uninstall.cmd set
 :: in the same console is used instead.
-set "PRESERVE_FILES="
+set "PRESERVE_FILES="Eternal Afternoon_Data\Managed\CameraUnlock.ini" "Eternal Afternoon_Data\Managed\HeadTracking.cfg""
 
 :: --- Loader-specific config (leave the ones that don't apply blank) ---
 :: MonoCecil: used to find + restore the original Assembly-CSharp.dll.
 set "MANAGED_SUBFOLDER=Eternal Afternoon_Data\Managed"
 set "ASSEMBLY_DLL=Assembly-CSharp.dll"
 set "PATCH_MARKER=HeadTracking_Patched_EternalAfternoon_v1"
-:: MonoCecil: extra files to also remove from MANAGED_SUBFOLDER (config/log
-:: files left behind by the mod itself).
-set "MANAGED_EXTRAS=HeadTracking.cfg HeadTracking.log HeadTracking_BOOT.log HeadTracking.manifest.json"
+:: MonoCecil: extra files to also remove from MANAGED_SUBFOLDER (log files
+:: left behind by the mod itself). The config files are in PRESERVE_FILES.
+set "MANAGED_EXTRAS=HeadTracking.log HeadTracking_BOOT.log HeadTracking.manifest.json"
 :: ASILoader: filename the ASI DLL was renamed to. Defaults to winmm.dll.
 set "ASI_LOADER_NAME=winmm.dll"
 :: Not used by this mod. Set blank so a value another mod's wrapper left in

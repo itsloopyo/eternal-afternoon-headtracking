@@ -64,9 +64,9 @@ if (Test-Path $backupPath) {
     Write-Host "No backup found - verify game files via Steam." -ForegroundColor Yellow
 }
 
-# Remove mod files
+# Remove mod files. CameraUnlock.ini and HeadTracking.cfg stay, so the settings survive a reinstall.
 $modFiles = @("EternalAfternoonHeadTracking.dll", "CameraUnlock.Core.dll", "CameraUnlock.Core.Unity.dll",
-              "Mono.Cecil.dll", "HeadTracking.cfg", "HeadTracking.log",
+              "Mono.Cecil.dll", "HeadTracking.log",
               "HeadTracking_BOOT.log", "HeadTracking.manifest.json")
 
 foreach ($f in $modFiles) {

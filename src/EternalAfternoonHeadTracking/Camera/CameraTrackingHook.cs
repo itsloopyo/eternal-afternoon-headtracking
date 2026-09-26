@@ -26,7 +26,6 @@ namespace EternalAfternoonHeadTracking
         private bool _isEnabled;
 
         private bool _trackingAppliedThisFrame;
-        internal bool ShowReticle { get; set; } = true;
 
         // Gameplay detection via CinemachineInputProvider.enabled
         private static bool _staticIsInGameplay;
@@ -148,11 +147,9 @@ namespace EternalAfternoonHeadTracking
 
             _trackingAppliedThisFrame = true;
 
-            // When the reticle is hidden, skip the aim work entirely: it's a
-            // Physics.Raycast + WorldToScreenPoint + smoothing, and no consumer
-            // would read the resulting ScreenOffset. Capture aim rotation only
-            // in the path that will use it.
-            bool aimWorkNeeded = ShowReticle && NullHelper.NotNull(_aimController);
+            // The aim controller is created lazily after the game loads; until then there
+            // is no crosshair to move. Capture aim rotation only in the path that uses it.
+            bool aimWorkNeeded = NullHelper.NotNull(_aimController);
 
             Quaternion aimRotation = aimWorkNeeded
                 ? _camera.transform.rotation

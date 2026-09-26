@@ -36,6 +36,7 @@
        would bring the Unity runtime assemblies into the test host. -->
   <ItemGroup>
     <Compile Include="..\..\src\EternalAfternoonHeadTracking\Legacy\*.cs" Link="Legacy\%(Filename)%(Extension)" />
+    <Compile Include="..\..\src\EternalAfternoonHeadTracking\Config\*.cs" Link="Config\%(Filename)%(Extension)" />
     <Compile Include="..\config_differential\**\*.cs" Link="config_differential\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\..\cameraunlock-core\csharp\testing\IniMutations.cs" Link="IniMutations.cs" />
   </ItemGroup>
