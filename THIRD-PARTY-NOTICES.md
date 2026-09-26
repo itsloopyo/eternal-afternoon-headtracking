@@ -14,7 +14,7 @@ footage" below, which ships in no release ZIP.
 | Component | Version | Licence | How it ships |
 |-----------|---------|---------|--------------|
 | Mono.Cecil | 0.11.5 | MIT | Bundled verbatim in the installer ZIP |
-| cameraunlock-core | f441e29427b7422a584ba492dddd7788881804b0 | MIT | Compiled into `EternalAfternoonHeadTracking.dll` |
+| cameraunlock-core | 3f3a821aa00d5b87ecde7c4af77585ff2fc71ff5 | MIT | Compiled into `EternalAfternoonHeadTracking.dll` |
 | OpenTrack | n/a | ISC | Not bundled; UDP protocol interoperability only |
 
 ---
@@ -60,7 +60,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 Git submodule at `cameraunlock-core/`, compiled into `EternalAfternoonHeadTracking.dll`. Our own code,
 MIT licensed, reproduced here so the notices are complete.
 
-- Pinned commit: `f441e29427b7422a584ba492dddd7788881804b0`
+- Pinned commit: `3f3a821aa00d5b87ecde7c4af77585ff2fc71ff5`
 
 ```
 MIT License
