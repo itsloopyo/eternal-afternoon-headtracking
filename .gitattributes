@@ -1,3 +1,6 @@
 * text=auto eol=lf
 *.cmd text eol=crlf
 *.bat text eol=crlf
+
+# Test data kept byte for byte: line endings and stray bytes are what the cases test.
+tests/config_differential/data/** -text

@@ -18,11 +18,14 @@ build = { cmd = "dotnet build src/EternalAfternoonHeadTracking/EternalAfternoonH
 # declared as a field, or the reverse) compiles cleanly and only fails in
 # game. Needs the game installed; skips and succeeds without it.
 verify-refs = { cmd = "powershell -ExecutionPolicy Bypass -File cameraunlock-core/scripts/verify-assembly-refs.ps1 -GameId eternal-afternoon -BuildDir src/EternalAfternoonHeadTracking/bin/Release", depends-on = ["build"] }
+# The config differential test (tests/config_differential) holds the frozen legacy import to
+# the newest published build's reader over every input the corpus generates.
+test = { cmd = "dotnet test tests/EternalAfternoonHeadTracking.Tests/EternalAfternoonHeadTracking.Tests.csproj -c Release", depends-on = ["build"] }
 # Bump vendored mod-loader copies to latest upstream within pinned range.
 # Manual; commit the result. CI does not run this.
 update-deps = "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/update-deps.ps1"
 install = { cmd = "powershell -ExecutionPolicy Bypass -File scripts/deploy.ps1 Release", depends-on = ["build"] }
-package = { cmd = "powershell -ExecutionPolicy Bypass -File scripts/package-release.ps1", depends-on = ["build"] }
+package = { cmd = "powershell -ExecutionPolicy Bypass -File scripts/package-release.ps1", depends-on = ["test"] }
 uninstall = "scripts\\uninstall.cmd"
 vanilla = "powershell -ExecutionPolicy Bypass -File scripts/vanilla.ps1"
 clean = "dotnet clean src/EternalAfternoonHeadTracking/EternalAfternoonHeadTracking.csproj"
