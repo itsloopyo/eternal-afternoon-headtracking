@@ -2,9 +2,7 @@
 
 ![Eternal Afternoon running with this mod](https://raw.githubusercontent.com/itsloopyo/eternal-afternoon-headtracking/main/assets/readme-clip.gif)
 
-*Footage of [Eternal Afternoon](https://store.steampowered.com/app/3924170/Eternal_Afternoon/), copyright (c) Alex Klexber, recorded on a purchased copy with this mod running. Used to show what the mod does; no ownership is claimed and no licence to it is granted. See [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).*
-
-An unofficial head tracking mod for Eternal Afternoon that moves the view with your head while your mouse or controller keeps control of look and interaction, driven by OpenTrack over UDP, with no VR headset required.
+An unofficial head tracking mod for Eternal Afternoon that moves the view with your head while your mouse or controller keeps control of look and interaction, driven by a webcam, phone, or any OpenTrack compatible tracker, with no VR headset required.
 
 ## Features
 
@@ -139,27 +137,13 @@ The game's crosshair follows your aim while head tracking moves the view. There 
 <!-- cameraunlock:config -->
 The mod reads its settings from `Eternal Afternoon_Data\Managed\CameraUnlock.ini` in the game folder, and creates the file when it starts and finds none. Edit it with any text editor.
 
-A setting set to `default` takes its value from `Defaults.ini`, which every head tracking mod that keeps its settings in `CameraUnlock.ini` reads. Head tracking mods that keep their settings in another file do not read it, and neither do earlier versions of this mod. Writing a value in place of `default` changes that setting for this game only. When the mod saves a setting that a hotkey changed in game, it writes the new value in place of `default`, so that setting no longer follows `Defaults.ini` in this game until you set it to `default` again.
+A setting set to `default` takes its value from `Defaults.ini`, which every head tracking mod that keeps its settings in `CameraUnlock.ini` reads. Head tracking mods that keep their settings in another file do not read it. Writing a value in place of `default` changes that setting for this game only. When the mod saves a setting that a hotkey changed in game, it writes the new value in place of `default`, so that setting no longer follows `Defaults.ini` in this game until you set it to `default` again.
 
 `Defaults.ini` is `%AppData%\CameraUnlock\Defaults.ini` on Windows; `$XDG_CONFIG_HOME/CameraUnlock/Defaults.ini` on Linux, or `~/.config/CameraUnlock/Defaults.ini` where `XDG_CONFIG_HOME` is not set, under Wine and Proton too; and `~/Library/Application Support/CameraUnlock/Defaults.ini` on macOS. The mod's log, where it writes one, names the file it read.
 
 When the mod starts and finds no `Defaults.ini`, it creates one holding the built-in values, unless Windows runs the game as a packaged app, or the game runs on Linux or macOS without Wine or Proton. The mod never changes `Defaults.ini` after that. Edit it with any text editor.
 
-Earlier versions of the mod kept these settings in `HeadTracking.cfg`, in the same folder. The first time this version starts and finds no `CameraUnlock.ini`, it reads your settings from `HeadTracking.cfg` and writes them into `CameraUnlock.ini`. It never changes `HeadTracking.cfg`, and does not read it again while `CameraUnlock.ini` exists.
-
-A setting that the defaults below set to `default` is written as `default` when the value imported for it equals its default at that start, which is the value `Defaults.ini` gives it, or the built-in value where `Defaults.ini` gives none. It then follows `Defaults.ini`. Every other setting is written with the value imported for it. `RotationEnabled` and `PositionEnabled` are one setting here, the tracking mode, so both are written as `default` or neither is.
-
-Comments, and keys the mod never read, are not carried over. Nor are these, where your old file had them:
-
-- Reticle settings, and a key that toggled the reticle.
-- A sensitivity, scale, deadzone, response curve or axis inversion you changed from its default. Set these in your tracker instead.
-- The setting for a feature that earlier versions shipped switched off while it was untested. It now follows the mod's default.
-
-An older version of the mod reads `HeadTracking.cfg` and never reads `CameraUnlock.ini`, so a setting you change after updating is not in `HeadTracking.cfg`.
-
-Deleting only `CameraUnlock.ini` makes the next start read `HeadTracking.cfg` again. To go back to the defaults, replace everything in `CameraUnlock.ini` with the defaults below. Every setting they set to `default` then follows `Defaults.ini`.
-
-On Linux and macOS without Wine or Proton, this version reads its settings and saves none: it creates no `CameraUnlock.ini`, reads your settings from `HeadTracking.cfg` again at every start while there is no `CameraUnlock.ini`, and a change made in game lasts until the game closes.
+On Linux and macOS without Wine or Proton, this version reads its settings and saves none: it creates no `CameraUnlock.ini` and a change made in game lasts until the game closes.
 
 The built-in value of each setting set to `default` below:
 
@@ -262,11 +246,11 @@ contain the most recent session.
 
 ## Updating
 
-Download the new release and run `install.cmd` again. Your settings are preserved. Updating from v0.2.0 or earlier imports them from `HeadTracking.cfg` into `CameraUnlock.ini` at the first start, as [Configuration](#configuration) describes.
+Download the new release and run `install.cmd` again. Your settings are preserved.
 
 ## Uninstalling
 
-Run `uninstall.cmd` from the release folder. This removes the mod DLLs and restores `Assembly-CSharp.dll` from its `.original` backup. It leaves `CameraUnlock.ini` and `HeadTracking.cfg` in place, so your settings survive a reinstall. No mod loader to remove - this mod patches `Assembly-CSharp.dll` directly rather than shipping BepInEx or MelonLoader.
+Run `uninstall.cmd` from the release folder. This removes the mod DLLs and restores `Assembly-CSharp.dll` from its `.original` backup. It leaves `CameraUnlock.ini` in place, so your settings survive a reinstall. No mod loader to remove - this mod patches `Assembly-CSharp.dll` directly rather than shipping BepInEx or MelonLoader.
 
 If something is stuck, use:
 
