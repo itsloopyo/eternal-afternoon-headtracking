@@ -108,7 +108,6 @@ $cecilPath = & (Join-Path $scriptDir "ensure-cecil.ps1") -ToolsDir $toolsDir
 Copy-Item $cecilPath -Destination $modDestDir -Force
 Write-Host "  mod/Mono.Cecil.dll" -ForegroundColor Green
 
-# Patcher source (consumed by install.cmd at install time)
 $patcherSource = Join-Path $scriptDir "patcher\BootstrapPatcher.cs"
 if (-not (Test-Path $patcherSource)) {
     throw "Patcher not found: $patcherSource"
@@ -117,8 +116,6 @@ $patcherMain = Join-Path $scriptDir "patcher\PatcherMain.cs"
 if (-not (Test-Path $patcherMain)) {
     throw "Patcher wrapper not found: $patcherMain"
 }
-Copy-Item $patcherSource -Destination $modDestDir -Force
-Write-Host "  mod/BootstrapPatcher.cs" -ForegroundColor Green
 
 # launcher-manifest.json names tools/BootstrapPatcher.exe as the patch tool, and the launcher
 # refuses a package that does not carry it.
@@ -134,8 +131,10 @@ if ($LASTEXITCODE -ne 0) {
     throw "Failed to compile BootstrapPatcher.exe"
 }
 Copy-Item $cecilPath -Destination $nativeToolsDir -Force
+Copy-Item $patcherSource -Destination $nativeToolsDir -Force
 Write-Host "  tools/BootstrapPatcher.exe" -ForegroundColor Green
 Write-Host "  tools/Mono.Cecil.dll" -ForegroundColor Green
+Write-Host "  tools/BootstrapPatcher.cs" -ForegroundColor Green
 
 
 # Vendor tree (committed fallback for offline installs). Copy if present.
