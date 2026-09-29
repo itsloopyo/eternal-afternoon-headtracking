@@ -21,8 +21,6 @@ namespace EternalAfternoonHeadTracking
         private readonly PositionProcessor _positionProcessor;
         private readonly PositionInterpolator _positionInterpolator;
 
-        private Vec3 _lastPositionOffset;
-
         /// <summary>Whether positional tracking is enabled.</summary>
         public bool PositionEnabled { get; set; } = true;
 
@@ -34,9 +32,6 @@ namespace EternalAfternoonHeadTracking
         /// False = camera-local yaw (yaw rotates around the camera's current up-axis).
         /// </summary>
         public bool WorldSpaceYaw { get; set; } = true;
-
-        /// <summary>Last applied position offset for transition fadeout.</summary>
-        public Vec3 LastPositionOffset => _lastPositionOffset;
 
         public CameraController(OpenTrackReceiver receiver, TrackingProcessor processor, PoseInterpolator interpolator,
             PositionProcessor positionProcessor, PositionInterpolator positionInterpolator)
@@ -142,14 +137,14 @@ namespace EternalAfternoonHeadTracking
                 var rawPos = _receiver.GetLatestPosition();
                 var interpolatedPos = _positionInterpolator.Update(rawPos, dt);
 
-                _lastPositionOffset = _positionProcessor.Process(interpolatedPos, headLocal.ToQuat4(), dt);
+                Vec3 positionOffset = _positionProcessor.Process(interpolatedPos, headLocal.ToQuat4(), dt);
 
                 // Negative z is the forward lean throughout the pipeline, and the clamp is
                 // built on that. Unity's transform +z is forward, so the flip belongs here,
                 // at the boundary - doing it with InvertZ inverts ahead of the clamp and
                 // hands the forward lean the tight backward budget.
                 Vector3 trackingOffset = new Vector3(
-                    _lastPositionOffset.X, _lastPositionOffset.Y, -_lastPositionOffset.Z);
+                    positionOffset.X, positionOffset.Y, -positionOffset.Z);
                 Vector3 worldOffset = gameRotation * trackingOffset;
                 Vector3 camSpaceOffset = rotViewMatrix.MultiplyVector(worldOffset);
                 rotViewMatrix.m03 -= camSpaceOffset.x;
@@ -166,7 +161,6 @@ namespace EternalAfternoonHeadTracking
             _interpolator.Reset();
             _positionProcessor?.Reset();
             _positionInterpolator?.Reset();
-            _lastPositionOffset = Vec3.Zero;
         }
     }
 }

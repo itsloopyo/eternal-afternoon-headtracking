@@ -26,18 +26,11 @@ namespace EternalAfternoonHeadTracking
         private bool _isEnabled;
 
         private bool _trackingAppliedThisFrame;
+        private bool _crosshairMoved;
 
         // Gameplay detection via CinemachineInputProvider.enabled
-        private static bool _staticIsInGameplay;
         private Behaviour _cachedInputProviderBehaviour;
         private bool _inputProviderSearched;
-        private bool _isInGameplay;
-
-        /// <summary>
-        /// Returns true if the player currently has camera control.
-        /// Used by GameCrosshair to skip repositioning during cutscenes/menus.
-        /// </summary>
-        public static bool IsInGameplay => _staticIsInGameplay;
 
         internal void Initialize(
             CameraController cameraController,
@@ -134,18 +127,22 @@ namespace EternalAfternoonHeadTracking
         {
             if (camera != _camera) return;
 
-            _trackingAppliedThisFrame = false;
+            _trackingAppliedThisFrame = CheckInGameplay()
+                && _isEnabled
+                && NullHelper.NotNull(_cameraController)
+                && NullHelper.NotNull(_receiver)
+                && _receiver.IsReceiving;
 
-            _isInGameplay = CheckInGameplay();
-            _staticIsInGameplay = _isInGameplay;
-            if (!_isInGameplay) return;
-
-            if (!_isEnabled || NullHelper.IsNull(_cameraController) || NullHelper.IsNull(_receiver) || !_receiver.IsReceiving)
+            if (!_trackingAppliedThisFrame)
+            {
+                // The view is back on the clean camera, so the crosshair belongs at the centre.
+                if (_crosshairMoved)
+                {
+                    _gameCrosshair?.ResetPosition();
+                    _crosshairMoved = false;
+                }
                 return;
-
-            if (_camera == null) return;
-
-            _trackingAppliedThisFrame = true;
+            }
 
             // The aim controller is created lazily after the game loads; until then there
             // is no crosshair to move. Capture aim rotation only in the path that uses it.
@@ -162,6 +159,7 @@ namespace EternalAfternoonHeadTracking
             {
                 _aimController.UpdateAim(_camera, aimRotation);
                 _gameCrosshair?.SetOffset(_aimController.ScreenOffset);
+                _crosshairMoved = true;
             }
         }
 
@@ -174,8 +172,7 @@ namespace EternalAfternoonHeadTracking
             if (camera != _camera) return;
             if (!_trackingAppliedThisFrame) return;
 
-            if (_camera != null)
-                ViewMatrixModifier.Reset(_camera);
+            ViewMatrixModifier.Reset(_camera);
         }
     }
 }

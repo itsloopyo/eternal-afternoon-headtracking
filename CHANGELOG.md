@@ -20,6 +20,12 @@
 - `uninstall.cmd` leaves `CameraUnlock.ini` and `HeadTracking.cfg` in place. Earlier versions deleted `HeadTracking.cfg`.
 - A hotkey set to Ctrl, Shift or Alt on its own in `HeadTracking.cfg` is not carried over. That key goes down before the key of any chord made with it, so the hotkey is left unbound, it keeps its Ctrl+Shift chord, and the log names the key as not carried.
 
+### Fixed
+
+- The crosshair measures how far away the surface under it is every frame, instead of a smoothed value taken 30 times a second. Leaning no longer leaves it trailing beside the point you are looking at after you turn from something near to something far, and looking at the sky no longer keeps the distance of the last wall.
+- The crosshair goes back to the centre of the screen when head tracking stops moving the view: in menus, dialogue and cutscenes, and when the tracker stops sending. It used to stay where it was last moved to.
+- The tracker receiver and the game no longer write to the mod's log at the same time. Both writing at once could garble the log or end the receiver, which stops head tracking until the game restarts.
+
 ### Added
 
 - `EnableOnStartup` under `[General]`: whether head tracking is on when the game starts. It defaults to `true`, which is what every earlier version did.

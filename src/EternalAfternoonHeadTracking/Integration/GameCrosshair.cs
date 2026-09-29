@@ -15,8 +15,10 @@ namespace EternalAfternoonHeadTracking
         private RectTransform _crosshairRect;
         private RectTransform _canvasRect;
         private bool _found;
-        private int _retryThrottle;
         private const int RetryInterval = 120; // ~2 seconds at 60fps
+        // Starts one short of the interval so the first lookup, and the first after the
+        // crosshair is destroyed, runs at once rather than two seconds late.
+        private int _retryThrottle = RetryInterval - 1;
         private Vector2 _originalPosition;
 
         // Canvas-to-screen scale is effectively constant until resolution changes.
@@ -72,6 +74,7 @@ namespace EternalAfternoonHeadTracking
                 // Check if Unity object was destroyed (scene change etc.)
                 if (_crosshairRect != null) return true;
                 _found = false;
+                _retryThrottle = RetryInterval - 1;
             }
 
             _retryThrottle++;

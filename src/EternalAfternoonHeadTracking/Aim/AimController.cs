@@ -11,28 +11,15 @@ namespace EternalAfternoonHeadTracking
     {
         private const float MaxRaycastDistance = 1000f;
         private const float MinRaycastDistance = 0.5f;
-        private const float DistanceSmoothingRate = 15f;
-
-        // Raycast sample cadence. The distance smoother runs with a ~67ms time
-        // constant (1/DistanceSmoothingRate), so a ~30Hz raycast rate is well
-        // above the smoother's effective bandwidth but an order of magnitude
-        // cheaper than per-render raycasting on a 144Hz display. The smoother
-        // is fed the actual elapsed time between raycasts, so its time
-        // constant is preserved exactly.
-        private const float RaycastInterval = 0.033f;
-
-        // Initialised to RaycastInterval so the very first UpdateAim call
-        // performs a raycast immediately instead of waiting a full interval.
-        private float _timeSinceLastRaycast = RaycastInterval;
-        private float _lastHitDistance = 100f;
 
         private Vector2 _screenOffset;
 
         public Vector2 ScreenOffset => _screenOffset;
 
         /// <summary>
-        /// Computes aim offset by projecting the pre-tracking (aim) direction
-        /// through the tracked camera using WorldToScreenPoint.
+        /// Projects the point the clean aim ray hits through the tracked camera. The depth is
+        /// this frame's own: a lean moves the render eye off the aim ray, so a smoothed or held
+        /// depth puts the crosshair beside the aim point at every range but one.
         /// </summary>
         public void UpdateAim(Camera camera, Quaternion preTrackingRotation)
         {
@@ -40,23 +27,16 @@ namespace EternalAfternoonHeadTracking
 
             Vector3 aimDir = preTrackingRotation * Vector3.forward;
 
-            _timeSinceLastRaycast += Time.deltaTime;
-            if (_timeSinceLastRaycast >= RaycastInterval)
-            {
-                float elapsed = _timeSinceLastRaycast;
-                _timeSinceLastRaycast = 0f;
+            // Surfaces nearer than MinRaycastDistance are skipped by starting the ray there,
+            // which keeps the filter every earlier build applied without reusing an old depth.
+            Vector3 origin = camera.transform.position + aimDir * MinRaycastDistance;
+            RaycastHit hit;
+            float depth = Physics.Raycast(origin, aimDir, out hit, MaxRaycastDistance - MinRaycastDistance,
+                    Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)
+                ? MinRaycastDistance + hit.distance
+                : MaxRaycastDistance;
 
-                RaycastHit hit;
-                if (Physics.Raycast(camera.transform.position, aimDir, out hit, MaxRaycastDistance,
-                        Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)
-                    && hit.distance >= MinRaycastDistance)
-                {
-                    float t = 1f - Mathf.Exp(-DistanceSmoothingRate * elapsed);
-                    _lastHitDistance = Mathf.Lerp(_lastHitDistance, hit.distance, t);
-                }
-            }
-
-            _screenOffset = CanvasCompensation.CalculateAimScreenOffset(camera, aimDir, _lastHitDistance, 1f);
+            _screenOffset = CanvasCompensation.CalculateAimScreenOffset(camera, aimDir, depth, 1f);
         }
     }
 }

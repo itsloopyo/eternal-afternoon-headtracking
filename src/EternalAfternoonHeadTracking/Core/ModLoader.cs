@@ -17,7 +17,9 @@ namespace EternalAfternoonHeadTracking
         private static bool _needsRecreate;
         private static ModRecreator _recreator;
 
-        // Log buffering for performance - reduces file I/O
+        // Log buffering for performance - reduces file I/O. The tracker receiver logs from its
+        // own threads, so every touch of the buffer holds _logLock.
+        private static readonly object _logLock = new object();
         private static readonly StringBuilder _logBuffer = new StringBuilder(4096);
         private static int _logCount;
         private const int LogFlushThreshold = 10;
@@ -112,6 +114,14 @@ namespace EternalAfternoonHeadTracking
             }
 
             DateTime now = DateTime.Now;
+            lock (_logLock)
+            {
+                AppendLine(now, message);
+            }
+        }
+
+        private static void AppendLine(DateTime now, string message)
+        {
             _logBuffer.Append('[');
             AppendTwoDigit(_logBuffer, now.Hour);
             _logBuffer.Append(':');
@@ -125,7 +135,7 @@ namespace EternalAfternoonHeadTracking
 
             if (_logCount >= LogFlushThreshold)
             {
-                FlushLog();
+                FlushLocked();
             }
         }
 
@@ -146,6 +156,14 @@ namespace EternalAfternoonHeadTracking
         /// Flushes buffered log messages to disk.
         /// </summary>
         internal static void FlushLog()
+        {
+            lock (_logLock)
+            {
+                FlushLocked();
+            }
+        }
+
+        private static void FlushLocked()
         {
             if (_logBuffer.Length == 0) return;
 
