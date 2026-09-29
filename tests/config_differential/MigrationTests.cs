@@ -175,6 +175,9 @@ namespace EternalAfternoonHeadTracking.Tests.ConfigDifferential
             "[General] RotationEnabled", "[Position] PositionEnabled",
             "[Smoothing] LocalSmoothing", "[Smoothing] RemoteSmoothing",
             "[Hotkeys] ToggleKey", "[Hotkeys] CycleTrackingModeKey", "[Hotkeys] YawModeKey",
+            "[Position] PositionLimitX", "[Position] PositionLimitY", "[Position] PositionLimitYDown",
+            "[Position] PositionLimitZ", "[Position] PositionLimitZBack",
+            "[Position] CollisionEnabled", "[Position] CollisionReleaseSmoothing",
         };
 
         // A Defaults.ini that differs from the built-in values on every row in FollowingRows (the
@@ -186,6 +189,8 @@ namespace EternalAfternoonHeadTracking.Tests.ConfigDifferential
             "[General]\r\nEnableOnStartup=false\r\nWorldSpaceYaw=false\r\nRotationEnabled=false\r\n" +
             "[Smoothing]\r\nLocalSmoothing=0.25\r\nRemoteSmoothing=0.6\r\n" +
             "[Position]\r\nPositionEnabled=true\r\n" +
+            "PositionLimitX=0.5\r\nPositionLimitY=0.35\r\nPositionLimitYDown=0.15\r\nPositionLimitZ=0.6\r\nPositionLimitZBack=0.05\r\n" +
+            "CollisionEnabled=false\r\nCollisionReleaseSmoothing=0.5\r\n" +
             "[Hotkeys]\r\nToggleKey=F2\r\nCycleTrackingModeKey=F3\r\nYawModeKey=F4\r\n";
 
         // Each legacy key the map carries into a global row, with the row it sets. v0.2.0 had no
@@ -216,6 +221,13 @@ namespace EternalAfternoonHeadTracking.Tests.ConfigDifferential
             { "ToggleKey", "[Hotkeys] ToggleKey" },
             { "CycleTrackingModeKey", "[Hotkeys] CycleTrackingModeKey" },
             { "YawModeKey", "[Hotkeys] YawModeKey" },
+            { "Position.LimitX", "[Position] PositionLimitX" },
+            { "Position.LimitY", "[Position] PositionLimitY" },
+            { "Position.LimitYDown", "[Position] PositionLimitYDown" },
+            { "Position.LimitZ", "[Position] PositionLimitZ" },
+            { "Position.LimitZBack", "[Position] PositionLimitZBack" },
+            { "CollisionEnabled", "[Position] CollisionEnabled" },
+            { "CollisionReleaseSmoothing", "[Position] CollisionReleaseSmoothing" },
         };
 
         /// <summary>

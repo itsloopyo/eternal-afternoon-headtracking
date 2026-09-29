@@ -21,6 +21,7 @@ namespace EternalAfternoonHeadTracking
         private CameraController _cameraController;
         private AimController _aimController;
         private GameCrosshair _gameCrosshair;
+        private GameFieldOfView _fieldOfView;
         private OpenTrackReceiver _receiver;
         private Camera _camera;
         private bool _isEnabled;
@@ -36,14 +37,18 @@ namespace EternalAfternoonHeadTracking
             CameraController cameraController,
             AimController aimController,
             GameCrosshair gameCrosshair,
+            GameFieldOfView fieldOfView,
             OpenTrackReceiver receiver)
         {
             _cameraController = cameraController;
             _aimController = aimController;
             _gameCrosshair = gameCrosshair;
+            _fieldOfView = fieldOfView;
             _receiver = receiver;
             _camera = GetComponent<Camera>();
             _isEnabled = true;
+            // A new camera is a cut: the last one's walls say nothing about this one's room.
+            _cameraController.ResetLeanClamp();
         }
 
         internal void SetAimComponents(AimController aimController, GameCrosshair gameCrosshair)
@@ -127,14 +132,18 @@ namespace EternalAfternoonHeadTracking
         {
             if (camera != _camera) return;
 
-            _trackingAppliedThisFrame = CheckInGameplay()
-                && _isEnabled
-                && NullHelper.NotNull(_cameraController)
-                && NullHelper.NotNull(_receiver)
-                && _receiver.IsReceiving;
+            bool inGameplay = CheckInGameplay();
+
+            // Read in gameplay whether or not a tracker is sending, so the zoom basis is on the
+            // log without one.
+            if (inGameplay) _fieldOfView.Update(_camera);
+
+            _trackingAppliedThisFrame = inGameplay && _isEnabled && _receiver.IsReceiving;
 
             if (!_trackingAppliedThisFrame)
             {
+                _cameraController.ResetLeanClamp();
+
                 // The view is back on the clean camera, so the crosshair belongs at the centre.
                 if (_crosshairMoved)
                 {
@@ -153,7 +162,7 @@ namespace EternalAfternoonHeadTracking
                 : default;
 
             // Apply head tracking to view matrix - rendering sees the LOOK direction
-            _cameraController.ApplyTracking(_camera);
+            _cameraController.ApplyTracking(_camera, _fieldOfView.Factor);
 
             if (aimWorkNeeded)
             {

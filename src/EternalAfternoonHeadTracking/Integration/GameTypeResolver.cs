@@ -8,7 +8,8 @@ namespace EternalAfternoonHeadTracking
     ///
     /// Eternal Afternoon uses:
     /// - KlexberGameTemplate.Core.UserInput: Singleton with CinemachineInputProvider for gameplay detection
-    /// - KlexberGameTemplate.Core.PlayerScript: Has middleOfScreenCircle (crosshair GameObject)
+    /// - KlexberGameTemplate.Core.PlayerScript: Has middleOfScreenCircle (crosshair GameObject) and defaultFOV
+    /// - KlexberGameTemplate.UI.CameraOptions: costumFOVValue, the player's field of view offset
     /// </summary>
     internal static class GameTypeResolver
     {
@@ -22,6 +23,10 @@ namespace EternalAfternoonHeadTracking
         // PlayerScript — for hiding middleOfScreenCircle
         private static Type _playerScriptType;
         private static FieldInfo _middleOfScreenCircleField;
+        private static PropertyInfo _defaultFovProperty;
+
+        // CameraOptions — the field of view offset the player set
+        private static PropertyInfo _fovOffsetProperty;
 
         internal static Type UserInputType { get { EnsureSearched(); return _userInputType; } }
         internal static FieldInfo UserInputInstanceField { get { EnsureSearched(); return _userInputInstanceField; } }
@@ -29,6 +34,8 @@ namespace EternalAfternoonHeadTracking
 
         internal static Type PlayerScriptType { get { EnsureSearched(); return _playerScriptType; } }
         internal static FieldInfo MiddleOfScreenCircleField { get { EnsureSearched(); return _middleOfScreenCircleField; } }
+        internal static PropertyInfo DefaultFovProperty { get { EnsureSearched(); return _defaultFovProperty; } }
+        internal static PropertyInfo FovOffsetProperty { get { EnsureSearched(); return _fovOffsetProperty; } }
 
         private static void EnsureSearched()
         {
@@ -37,6 +44,7 @@ namespace EternalAfternoonHeadTracking
 
             bool foundUserInput = false;
             bool foundPlayerScript = false;
+            bool foundCameraOptions = false;
 
             foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
             {
@@ -68,10 +76,25 @@ namespace EternalAfternoonHeadTracking
 
                             _middleOfScreenCircleField = t.GetField("middleOfScreenCircle",
                                 BindingFlags.Public | BindingFlags.Instance);
+
+                            _defaultFovProperty = t.GetProperty("defaultFOV",
+                                BindingFlags.Public | BindingFlags.Instance);
                         }
                     }
 
-                    if (foundUserInput && foundPlayerScript) break;
+                    if (!foundCameraOptions)
+                    {
+                        var t = asm.GetType("KlexberGameTemplate.UI.CameraOptions");
+                        if (NullHelper.NotNull(t))
+                        {
+                            foundCameraOptions = true;
+
+                            _fovOffsetProperty = t.GetProperty("costumFOVValue",
+                                BindingFlags.Public | BindingFlags.Static);
+                        }
+                    }
+
+                    if (foundUserInput && foundPlayerScript && foundCameraOptions) break;
                 }
                 catch (Exception ex)
                 {
@@ -87,6 +110,7 @@ namespace EternalAfternoonHeadTracking
 
             if (!foundUserInput) ModLoader.Log("[GameTypeResolver] UserInput type NOT found");
             if (!foundPlayerScript) ModLoader.Log("[GameTypeResolver] PlayerScript type NOT found");
+            if (!foundCameraOptions) ModLoader.Log("[GameTypeResolver] CameraOptions type NOT found");
         }
     }
 }

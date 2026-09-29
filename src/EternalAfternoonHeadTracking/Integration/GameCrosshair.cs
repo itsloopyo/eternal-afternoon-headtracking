@@ -12,13 +12,10 @@ namespace EternalAfternoonHeadTracking
     /// </summary>
     internal sealed class GameCrosshair
     {
+        private readonly GamePlayer _player;
         private RectTransform _crosshairRect;
         private RectTransform _canvasRect;
         private bool _found;
-        private const int RetryInterval = 120; // ~2 seconds at 60fps
-        // Starts one short of the interval so the first lookup, and the first after the
-        // crosshair is destroyed, runs at once rather than two seconds late.
-        private int _retryThrottle = RetryInterval - 1;
         private Vector2 _originalPosition;
 
         // Canvas-to-screen scale is effectively constant until resolution changes.
@@ -28,6 +25,11 @@ namespace EternalAfternoonHeadTracking
         private float _cachedScaleY = 1f;
         private int _cachedScreenWidth;
         private int _cachedScreenHeight;
+
+        internal GameCrosshair(GamePlayer player)
+        {
+            _player = player;
+        }
 
         /// <summary>
         /// Moves the game crosshair by the given screen-pixel offset from center.
@@ -74,12 +76,7 @@ namespace EternalAfternoonHeadTracking
                 // Check if Unity object was destroyed (scene change etc.)
                 if (_crosshairRect != null) return true;
                 _found = false;
-                _retryThrottle = RetryInterval - 1;
             }
-
-            _retryThrottle++;
-            if (_retryThrottle < RetryInterval) return false;
-            _retryThrottle = 0;
 
             var go = FindCrosshairGameObject();
             if (go == null) return false;
@@ -102,23 +99,15 @@ namespace EternalAfternoonHeadTracking
             return true;
         }
 
-        private static GameObject FindCrosshairGameObject()
+        private GameObject FindCrosshairGameObject()
         {
-            var playerScriptType = GameTypeResolver.PlayerScriptType;
             var crosshairField = GameTypeResolver.MiddleOfScreenCircleField;
+            if (NullHelper.IsNull(crosshairField)) return null;
 
-            if (NullHelper.IsNull(playerScriptType) || NullHelper.IsNull(crosshairField))
-                return null;
+            Component player = _player.Current;
+            if (player == null) return null;
 
-            var playerScripts = UnityEngine.Object.FindObjectsOfType(playerScriptType);
-            if (playerScripts == null || playerScripts.Length == 0)
-                return null;
-
-            object crosshairObj = crosshairField.GetValue(playerScripts[0]);
-            if (NullHelper.IsNull(crosshairObj))
-                return null;
-
-            return crosshairObj as GameObject;
+            return crosshairField.GetValue(player) as GameObject;
         }
     }
 }

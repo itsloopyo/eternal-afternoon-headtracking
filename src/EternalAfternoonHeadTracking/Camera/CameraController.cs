@@ -1,3 +1,4 @@
+using System;
 using CameraUnlock.Core.Data;
 using CameraUnlock.Core.Processing;
 using CameraUnlock.Core.Protocol;
@@ -20,6 +21,15 @@ namespace EternalAfternoonHeadTracking
         private readonly PoseInterpolator _interpolator;
         private readonly PositionProcessor _positionProcessor;
         private readonly PositionInterpolator _positionInterpolator;
+        private readonly LeanClamp _leanClamp;
+        private readonly LeanTrace _leanTrace;
+        private readonly Action<string> _log;
+
+        // Clamp state as last logged, and when a periodic sample is next due.
+        private bool _loggedContact;
+        private bool _loggedQueryFailed;
+        private float _nextLeanSampleTime;
+        private const float LeanSampleIntervalSeconds = 5f;
 
         /// <summary>Whether positional tracking is enabled.</summary>
         public bool PositionEnabled { get; set; } = true;
@@ -33,21 +43,29 @@ namespace EternalAfternoonHeadTracking
         /// </summary>
         public bool WorldSpaceYaw { get; set; } = true;
 
-        public CameraController(OpenTrackReceiver receiver, TrackingProcessor processor, PoseInterpolator interpolator,
-            PositionProcessor positionProcessor, PositionInterpolator positionInterpolator)
+        /// <param name="leanClamp">Null when CollisionEnabled is off.</param>
+        internal CameraController(OpenTrackReceiver receiver, TrackingProcessor processor, PoseInterpolator interpolator,
+            PositionProcessor positionProcessor, PositionInterpolator positionInterpolator,
+            LeanClamp leanClamp, LeanTrace leanTrace, Action<string> log)
         {
             _receiver = receiver;
             _processor = processor;
             _interpolator = interpolator;
             _positionProcessor = positionProcessor;
             _positionInterpolator = positionInterpolator;
+            _leanClamp = leanClamp;
+            _leanTrace = leanTrace;
+            _log = log;
         }
 
         /// <summary>
         /// Applies head tracking rotation to the specified camera.
         /// Called by CameraTrackingHook.OnPreCull() with the hook's camera.
+        /// <paramref name="zoomFactor"/> scales yaw, pitch and the lean so a head movement moves
+        /// the picture as far as it does un-zoomed; roll turns the picture by the same angle at
+        /// every field of view and is left alone.
         /// </summary>
-        public void ApplyTracking(Camera camera)
+        public void ApplyTracking(Camera camera, float zoomFactor)
         {
             if (camera == null) return;
 
@@ -69,8 +87,8 @@ namespace EternalAfternoonHeadTracking
 
             var processed = _processor.Process(rawPose, dt);
 
-            float headYaw = processed.Yaw;
-            float headPitch = -processed.Pitch;
+            float headYaw = ZoomCompensation.ScaleAngleForZoom(processed.Yaw, zoomFactor);
+            float headPitch = -ZoomCompensation.ScaleAngleForZoom(processed.Pitch, zoomFactor);
             float headRoll = processed.Roll;
 
             if (!RotationEnabled)
@@ -144,15 +162,68 @@ namespace EternalAfternoonHeadTracking
                 // at the boundary - doing it with InvertZ inverts ahead of the clamp and
                 // hands the forward lean the tight backward budget.
                 Vector3 trackingOffset = new Vector3(
-                    positionOffset.X, positionOffset.Y, -positionOffset.Z);
-                Vector3 worldOffset = gameRotation * trackingOffset;
+                    positionOffset.X, positionOffset.Y, -positionOffset.Z) * zoomFactor;
+                Vector3 worldOffset = ClampLean(camera, camPosition, gameRotation * trackingOffset, dt);
                 Vector3 camSpaceOffset = rotViewMatrix.MultiplyVector(worldOffset);
                 rotViewMatrix.m03 -= camSpaceOffset.x;
                 rotViewMatrix.m13 -= camSpaceOffset.y;
                 rotViewMatrix.m23 -= camSpaceOffset.z;
             }
+            else
+            {
+                ResetLeanClamp();
+            }
 
             camera.worldToCameraMatrix = rotViewMatrix;
+        }
+
+        /// <summary>
+        /// Trims the lean to what the room leaves free, swept from the clean eye (where the game
+        /// put the camera) before the offset is applied.
+        /// </summary>
+        private Vector3 ClampLean(Camera camera, Vector3 cleanEye, Vector3 wantedLean, float dt)
+        {
+            if (_leanClamp == null) return wantedLean;
+
+            // The trace carries the standoff as its sphere's radius and hands it back on every
+            // distance, and the clamp takes it off again as its skin, so the two are one number.
+            LeanClampSettings settings = _leanClamp.Settings;
+            settings.Skin = _leanTrace.BeginFrame(camera);
+            _leanClamp.Settings = settings;
+
+            Vec3 clamped = _leanClamp.Apply(
+                new Vec3(cleanEye.x, cleanEye.y, cleanEye.z),
+                new Vec3(wantedLean.x, wantedLean.y, wantedLean.z),
+                dt, _leanTrace.Query);
+
+            LogLeanClamp(wantedLean.magnitude, clamped.Magnitude);
+            return new Vector3(clamped.X, clamped.Y, clamped.Z);
+        }
+
+        // Transitions alone cannot tell "the sweep runs and the room is open" from "the sweep is
+        // not running", so a sample goes out on an interval as well.
+        private void LogLeanClamp(float wanted, float allowed)
+        {
+            bool contact = _leanClamp.InContact;
+            bool failed = _leanClamp.LastQueryFailed;
+            float now = Time.unscaledTime;
+            bool changed = contact != _loggedContact || failed != _loggedQueryFailed;
+            if (!changed && now < _nextLeanSampleTime) return;
+
+            _loggedContact = contact;
+            _loggedQueryFailed = failed;
+            _nextLeanSampleTime = now + LeanSampleIntervalSeconds;
+            _log(string.Format("Lean clamp{0}: wanted {1:F3}m, allowed {2:F3}m, contact {3}, query failed {4}, standoff {5:F3}m",
+                changed ? "" : " sample", wanted, allowed, contact, failed, _leanTrace.Standoff));
+        }
+
+        /// <summary>
+        /// Forgets the clamp's allowance, so a wall from one room is not carried into the next.
+        /// Called on every frame that applies no lean, and when the camera changes.
+        /// </summary>
+        public void ResetLeanClamp()
+        {
+            _leanClamp?.Reset();
         }
 
         public void ResetCamera()
@@ -161,6 +232,7 @@ namespace EternalAfternoonHeadTracking
             _interpolator.Reset();
             _positionProcessor?.Reset();
             _positionInterpolator?.Reset();
+            ResetLeanClamp();
         }
     }
 }

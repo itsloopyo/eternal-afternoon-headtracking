@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using CameraUnlock.Core.Config;
 using CameraUnlock.Core.Data;
@@ -27,6 +28,8 @@ namespace EternalAfternoonHeadTracking
         private CameraController _cameraController;
         private AimController _aimController;
         private GameCrosshair _gameCrosshair;
+        private GamePlayer _gamePlayer;
+        private GameFieldOfView _fieldOfView;
         private bool _isEnabled;
         private TrackingMode _trackingMode;
 
@@ -65,21 +68,40 @@ namespace EternalAfternoonHeadTracking
                 Deadzone = DeadzoneSettings.None
             };
             var interpolator = new PoseInterpolator();
+            PositionSettings limits = _config.Position;
             var positionProcessor = new PositionProcessor
             {
                 TrackerPivotForward = 0.01f,
                 // Every build before the canonical config shipped InvertPositionX = true with the
                 // sensitivities at 1 and the other inversions off: the tracker's x arrives mirrored
                 // against Unity's. Folded in here so the view moves as it did at those defaults.
-                Settings = PositionSettings.Symmetric(
+                Settings = new PositionSettings(
                     1f, 1f, 1f,
-                    float.MaxValue, float.MaxValue, float.MaxValue, float.MaxValue,
+                    limits.LimitX, limits.LimitY, limits.LimitYDown, limits.LimitZ, limits.LimitZBack,
                     _config.LocalSmoothing, _config.RemoteSmoothing,
                     invertX: true, invertY: false, invertZ: false
                 )
             };
             var positionInterpolator = new PositionInterpolator();
-            _cameraController = new CameraController(_receiver, processor, interpolator, positionProcessor, positionInterpolator)
+
+            _gamePlayer = new GamePlayer();
+            _fieldOfView = new GameFieldOfView(_gamePlayer, Log);
+            LeanClamp leanClamp = null;
+            if (_config.CollisionEnabled)
+            {
+                leanClamp = new LeanClamp
+                {
+                    Settings = new LeanClampSettings { ReleaseSmoothing = _config.CollisionReleaseSmoothing }
+                };
+            }
+            var leanTrace = new LeanTrace(_gamePlayer, _config.CollisionMargin, Physics.DefaultRaycastLayers, Log);
+            Log(string.Format(CultureInfo.InvariantCulture,
+                "Position limits: x +-{0}, y +{1}/-{2}, z forward {3}, back {4} m. Collision {5}, margin {6} m, release smoothing {7}",
+                limits.LimitX, limits.LimitY, limits.LimitYDown, limits.LimitZ, limits.LimitZBack,
+                _config.CollisionEnabled ? "on" : "off", _config.CollisionMargin, _config.CollisionReleaseSmoothing));
+
+            _cameraController = new CameraController(_receiver, processor, interpolator, positionProcessor, positionInterpolator,
+                leanClamp, leanTrace, Log)
             {
                 WorldSpaceYaw = _config.WorldSpaceYaw,
             };
@@ -222,7 +244,7 @@ namespace EternalAfternoonHeadTracking
                 _cameraCheckCounter = 0;
 
                 _cameraHook = _cachedMainCamera.gameObject.AddComponent<CameraTrackingHook>();
-                _cameraHook.Initialize(_cameraController, _aimController, _gameCrosshair, _receiver);
+                _cameraHook.Initialize(_cameraController, _aimController, _gameCrosshair, _fieldOfView, _receiver);
                 _cameraHook.SetEnabled(_isEnabled);
                 Log($"Attached CameraTrackingHook to camera: {_cachedMainCamera.name}");
             }
@@ -233,7 +255,7 @@ namespace EternalAfternoonHeadTracking
             if (_cameraController == null) return;
 
             _aimController = new AimController();
-            _gameCrosshair = new GameCrosshair();
+            _gameCrosshair = new GameCrosshair(_gamePlayer);
 
             // Update hook with aim components
             if (_cameraHook != null)

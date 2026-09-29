@@ -25,8 +25,13 @@
 - The crosshair measures how far away the surface under it is every frame, instead of a smoothed value taken 30 times a second. Leaning no longer leaves it trailing beside the point you are looking at after you turn from something near to something far, and looking at the sky no longer keeps the distance of the last wall.
 - The crosshair goes back to the centre of the screen when head tracking stops moving the view: in menus, dialogue and cutscenes, and when the tracker stops sending. It used to stay where it was last moved to.
 - The tracker receiver and the game no longer write to the mod's log at the same time. Both writing at once could garble the log or end the receiver, which stops head tracking until the game restarts.
+- Leaning no longer moves the view into walls, doors or furniture. A lean stops `CollisionMargin` (0.1 m) short of anything solid, more where the camera's near clip plane needs it, and eases back out when you move clear. `CollisionEnabled=false` turns this off.
+- Head movement moves the picture as far when zoomed in (and when looking at the watch) as it does un-zoomed. It used to move it further, by the ratio of the two fields of view.
 
 ### Added
+
+- Position limits, with these built-in values: `PositionLimitX` (0.3 m left and right), `PositionLimitY` (0.2 m up), `PositionLimitYDown` (0.2 m down), `PositionLimitZ` (0.4 m forward) and `PositionLimitZBack` (0.1 m back), under `[Position]`. Earlier versions had no limit, so a lean went as far as the tracker sent.
+- `CollisionEnabled`, `CollisionMargin` and `CollisionReleaseSmoothing` under `[Position]`, for the wall check above.
 
 - `EnableOnStartup` under `[General]`: whether head tracking is on when the game starts. It defaults to `true`, which is what every earlier version did.
 - A setting set to `default` in `CameraUnlock.ini` takes its value from `Defaults.ini`, which every head tracking mod that keeps its settings in `CameraUnlock.ini` reads. Head tracking mods that keep their settings in another file do not read it, and neither do earlier versions of this mod. Writing a value in place of `default` changes that setting for this game only. When the mod saves a setting that a hotkey changed in game, it writes the new value in place of `default`, so that setting no longer follows `Defaults.ini` in this game until you set it to `default` again.

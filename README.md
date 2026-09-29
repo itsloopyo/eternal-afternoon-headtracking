@@ -137,7 +137,7 @@ The game's crosshair follows your aim while head tracking moves the view. There 
 <!-- cameraunlock:config -->
 The mod reads its settings from `Eternal Afternoon_Data\Managed\CameraUnlock.ini` in the game folder, and creates the file when it starts and finds none. Edit it with any text editor.
 
-A setting set to `default` takes its value from `Defaults.ini`, which every head tracking mod that keeps its settings in `CameraUnlock.ini` reads. Head tracking mods that keep their settings in another file do not read it. Writing a value in place of `default` changes that setting for this game only. When the mod saves a setting that a hotkey changed in game, it writes the new value in place of `default`, so that setting no longer follows `Defaults.ini` in this game until you set it to `default` again.
+A setting set to `default` takes its value from `Defaults.ini`, which every head tracking mod that keeps its settings in `CameraUnlock.ini` reads. Head tracking mods that keep their settings in another file do not read it. Changing a setting in `Defaults.ini` changes it in every game that has it set to `default`. Writing a value in place of `default` changes that setting for this game only. When the mod saves a setting that a hotkey changed in game, it writes the new value in place of `default`, so that setting no longer follows `Defaults.ini` in this game until you set it to `default` again.
 
 `Defaults.ini` is `%AppData%\CameraUnlock\Defaults.ini` on Windows; `$XDG_CONFIG_HOME/CameraUnlock/Defaults.ini` on Linux, or `~/.config/CameraUnlock/Defaults.ini` where `XDG_CONFIG_HOME` is not set, under Wine and Proton too; and `~/Library/Application Support/CameraUnlock/Defaults.ini` on macOS. The mod's log, where it writes one, names the file it read.
 
@@ -154,6 +154,13 @@ The built-in value of each setting set to `default` below:
 - `LocalSmoothing=0.0`
 - `RemoteSmoothing=0.15`
 - `PositionEnabled=true`
+- `PositionLimitX=0.3`
+- `PositionLimitY=0.2`
+- `PositionLimitYDown=0.2`
+- `PositionLimitZ=0.4`
+- `PositionLimitZBack=0.1`
+- `CollisionEnabled=true`
+- `CollisionReleaseSmoothing=0.9`
 - `ToggleKey=End, Ctrl+Shift+Y`
 - `CycleTrackingModeKey=PageUp, Ctrl+Shift+G`
 - `YawModeKey=PageDown, Ctrl+Shift+H`
@@ -168,8 +175,9 @@ With every setting at its default, the file reads:
 ; that keeps its settings in CameraUnlock.ini reads: %AppData%\CameraUnlock\Defaults.ini on
 ; Windows, $XDG_CONFIG_HOME/CameraUnlock/Defaults.ini (normally ~/.config/CameraUnlock) on
 ; Linux, under Wine and Proton too, and ~/Library/Application Support/CameraUnlock/Defaults.ini
-; on macOS. The log names the file it read. Write a value instead of default to change that
-; setting for this game only.
+; on macOS. The log names the file it read. Change a setting in Defaults.ini to change it in
+; every game that has it set to default, or write a value here instead of default to change it
+; for this game only.
 
 [CameraUnlock]
 ; Written by the mod. Leave this section in place.
@@ -199,6 +207,25 @@ RemoteSmoothing=default
 ; true: moving your head moves the view.
 ; Tracking mode at startup, with RotationEnabled. The mode hotkey changes both.
 PositionEnabled=default
+; How far, in metres, leaning left or right can move the view.
+PositionLimitX=default
+; How far, in metres, raising your head can move the view.
+PositionLimitY=default
+; How far, in metres, lowering your head can move the view.
+PositionLimitYDown=default
+; How far, in metres, leaning forward can move the view.
+PositionLimitZ=default
+; How far, in metres, leaning back can move the view.
+PositionLimitZBack=default
+; true: leaning stops at walls instead of moving the view through them.
+; Only games whose mod sweeps the level for walls read this; the rest ignore it.
+CollisionEnabled=default
+; How far, in metres, the view is held off a wall when you lean into it.
+; The mod raises it where the corners of the camera's near clip plane need more room.
+CollisionMargin=0.1
+; How gently the view eases back out after a wall stopped a lean.
+; 0 is the quickest, 1 the slowest.
+CollisionReleaseSmoothing=default
 
 [Hotkeys]
 ; Turns head tracking on and off.
@@ -237,6 +264,9 @@ contain the most recent session.
 - Increase `RemoteSmoothing` (phone/network tracker) or `LocalSmoothing` (tracker on this PC) in `CameraUnlock.ini`
 - Lower the sensitivity in your tracker app. The mod has no sensitivity settings of its own
 - Improve lighting for webcam-based tracking
+
+**Leaning stops short near a wall or a piece of furniture:**
+- That is the wall check: a lean stops `CollisionMargin` short of anything solid, so the view never ends up inside it. `CollisionEnabled=false` in `CameraUnlock.ini` turns it off.
 
 **Wrong rotation or lean axis:**
 - Invert the offending axis in your tracker app, for example in OpenTrack's output mapping. The mod has no axis inversion settings of its own

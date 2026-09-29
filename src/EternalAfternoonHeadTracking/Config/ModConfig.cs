@@ -25,12 +25,23 @@ namespace EternalAfternoonHeadTracking.Config
                     ConfigConcepts.LocalSmoothing,
                     ConfigConcepts.RemoteSmoothing,
                     ConfigConcepts.PositionEnabled,
+                    ConfigConcepts.PositionLimitX,
+                    ConfigConcepts.PositionLimitY,
+                    ConfigConcepts.PositionLimitYDown,
+                    ConfigConcepts.PositionLimitZ,
+                    ConfigConcepts.PositionLimitZBack,
+                    ConfigConcepts.CollisionEnabled,
+                    ConfigConcepts.CollisionMargin,
+                    ConfigConcepts.CollisionReleaseSmoothing,
                     ConfigConcepts.ToggleKey,
                     ConfigConcepts.CycleTrackingModeKey,
                     ConfigConcepts.YawModeKey)
                 .Select(ConfigConcepts.WorldSpaceYaw).Writable()
                 .Select(ConfigConcepts.RotationEnabled).Writable()
-                .Select(ConfigConcepts.PositionEnabled).Writable();
+                .Select(ConfigConcepts.PositionEnabled).Writable()
+                .Select(ConfigConcepts.CollisionMargin)
+                .Comment("How far, in metres, the view is held off a wall when you lean into it.\n" +
+                         "The mod raises it where the corners of the camera's near clip plane need more room.");
         }
 
         /// <summary>

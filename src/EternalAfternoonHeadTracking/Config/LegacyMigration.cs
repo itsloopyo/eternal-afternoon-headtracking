@@ -99,6 +99,14 @@ namespace EternalAfternoonHeadTracking.Config
             follows.Setting(ConfigConcepts.ToggleKey, legacy.ToggleKey, Shipped.ToggleKey);
             follows.Setting(ConfigConcepts.CycleTrackingModeKey, legacy.PositionToggleKey, Shipped.PositionToggleKey);
             follows.Setting(ConfigConcepts.YawModeKey, legacy.YawModeKey, Shipped.YawModeKey);
+            // v0.2.0 had no position limits and no collision check.
+            follows.NotInLegacy(ConfigConcepts.PositionLimitX);
+            follows.NotInLegacy(ConfigConcepts.PositionLimitY);
+            follows.NotInLegacy(ConfigConcepts.PositionLimitYDown);
+            follows.NotInLegacy(ConfigConcepts.PositionLimitZ);
+            follows.NotInLegacy(ConfigConcepts.PositionLimitZBack);
+            follows.NotInLegacy(ConfigConcepts.CollisionEnabled);
+            follows.NotInLegacy(ConfigConcepts.CollisionReleaseSmoothing);
             return follows;
         }
 

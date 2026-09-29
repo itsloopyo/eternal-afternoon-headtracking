@@ -76,6 +76,13 @@ namespace EternalAfternoonHeadTracking.Tests.ConfigDifferential
                 { "ToggleKey", c.ToggleKeyName },
                 { "CycleTrackingModeKey", c.CycleTrackingModeKeyName },
                 { "YawModeKey", c.YawModeKeyName },
+                { "Position.LimitX", Bits(c.Position.LimitX) },
+                { "Position.LimitY", Bits(c.Position.LimitY) },
+                { "Position.LimitYDown", Bits(c.Position.LimitYDown) },
+                { "Position.LimitZ", Bits(c.Position.LimitZ) },
+                { "Position.LimitZBack", Bits(c.Position.LimitZBack) },
+                { "CollisionEnabled", c.CollisionEnabled.ToString() },
+                { "CollisionReleaseSmoothing", Bits(c.CollisionReleaseSmoothing) },
             };
         }
 
