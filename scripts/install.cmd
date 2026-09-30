@@ -25,7 +25,7 @@ set "GAME_ID=eternal-afternoon"
 set "MOD_DISPLAY_NAME=Eternal Afternoon Head Tracking"
 set "MOD_DLLS=EternalAfternoonHeadTracking.dll CameraUnlock.Core.dll CameraUnlock.Core.Unity.dll"
 set "MOD_INTERNAL_NAME=EternalAfternoonHeadTracking"
-set "MOD_VERSION=0.2.0"
+set "MOD_VERSION=0.3.0"
 set "STATE_FILE=.headtracking-state.json"
 set "FRAMEWORK_TYPE=BepInEx"
 :: x64 or x86 - selects the vendored BepInEx zip.
