@@ -5,16 +5,41 @@
     "version": "0.0.0",
     "game_id": "eternal-afternoon"
   },
-  "strategy": "MonoCecil",
+  "strategy": "BepInEx5",
   "delivery_mode": "manifest",
-
+  "loader": {
+    "archives": [
+      {
+        "source": "vendor/bepinex/BepInEx_win_x64.zip",
+        "dest": "",
+        "flatten": null
+      }
+    ],
+    "detect": [
+      "BepInEx/core/BepInEx.dll",
+      "BepInEx/core/BepInEx.Core.dll"
+    ],
+    "seed": [
+      {
+        "target": "BepInEx/config/BepInEx.cfg",
+        "content_b64": "W0xvZ2dpbmcuQ29uc29sZV0NCkVuYWJsZWQgPSB0cnVlDQoNCltMb2dnaW5nLkRpc2tdDQpFbmFibGVkID0gdHJ1ZQ0K"
+      }
+    ]
+  },
   "files": [
-    { "source": "mod/EternalAfternoonHeadTracking.dll", "target": "Eternal Afternoon_Data/Managed/EternalAfternoonHeadTracking.dll" },
-    { "source": "mod/CameraUnlock.Core.dll", "target": "Eternal Afternoon_Data/Managed/CameraUnlock.Core.dll" },
-    { "source": "mod/CameraUnlock.Core.Unity.dll", "target": "Eternal Afternoon_Data/Managed/CameraUnlock.Core.Unity.dll" },
-    { "source": "mod/Mono.Cecil.dll", "target": "Eternal Afternoon_Data/Managed/Mono.Cecil.dll" }
+    {
+      "source": "plugins/EternalAfternoonHeadTracking.dll",
+      "target": "BepInEx/plugins/EternalAfternoonHeadTracking.dll"
+    },
+    {
+      "source": "plugins/CameraUnlock.Core.dll",
+      "target": "BepInEx/plugins/CameraUnlock.Core.dll"
+    },
+    {
+      "source": "plugins/CameraUnlock.Core.Unity.dll",
+      "target": "BepInEx/plugins/CameraUnlock.Core.Unity.dll"
+    }
   ],
-
   "config": {
     "path": "Eternal Afternoon_Data/Managed/CameraUnlock.ini",
     "anchor": "game_root",
@@ -22,16 +47,6 @@
     "canonical_since": "0.3.0",
     "per_game": {}
   },
-
-  "patches": [
-    {
-      "target": "Eternal Afternoon_Data/Managed/Assembly-CSharp.dll",
-      "tool": "tools/BootstrapPatcher.exe",
-      "args": [ "{input}", "{output}" ],
-      "marker": "HeadTracking_Patched_EternalAfternoon_v1"
-    }
-  ],
-
   "runtime_requirements": [],
   "dependencies": []
 }

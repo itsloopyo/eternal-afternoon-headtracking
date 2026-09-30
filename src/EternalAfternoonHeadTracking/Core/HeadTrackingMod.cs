@@ -121,19 +121,14 @@ namespace EternalAfternoonHeadTracking
         }
 
         /// <summary>
-        /// Settings live in CameraUnlock.ini beside the mod's DLL, read and written by core's config
-        /// owner, with rows set to default following the player's Defaults.ini. HeadTracking.cfg,
-        /// which earlier builds read, is imported once while CameraUnlock.ini is absent and never
-        /// written.
+        /// Settings live in CameraUnlock.ini in Eternal Afternoon_Data\Managed, the folder earlier
+        /// builds kept HeadTracking.cfg in, read and written by core's config owner, with rows set
+        /// to default following the player's Defaults.ini. HeadTracking.cfg is imported once while
+        /// CameraUnlock.ini is absent and never written.
         /// </summary>
         private void LoadConfig()
         {
-            string folder = Path.GetDirectoryName(typeof(HeadTrackingMod).Assembly.Location);
-            if (string.IsNullOrEmpty(folder))
-            {
-                throw new InvalidOperationException(
-                    "Cannot resolve the config folder: Assembly.Location is empty. The mod assembly must be loaded from disk.");
-            }
+            string folder = Path.Combine(Application.dataPath, "Managed");
 
             _configOwner = new ConfigOwner<HeadTrackingConfigData>(
                 ModConfig.Options(folder, DefaultsFile.PerUser(), message => Log("Config: " + message)));

@@ -5,8 +5,8 @@ using CameraUnlock.Core.Config;
 namespace EternalAfternoonHeadTracking.Config
 {
     /// <summary>
-    /// The settings in CameraUnlock.ini, beside the mod's DLL in Eternal Afternoon_Data\Managed,
-    /// and the owner that reads and writes them. HeadTracking.cfg beside it, which earlier builds
+    /// The settings in CameraUnlock.ini in Eternal Afternoon_Data\Managed, the folder earlier builds
+    /// loaded the mod from, and the owner that reads and writes them. HeadTracking.cfg beside it, which earlier builds
     /// read, is imported once while CameraUnlock.ini is absent and never written.
     /// </summary>
     public static class ModConfig

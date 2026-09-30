@@ -6,9 +6,8 @@ using UnityEngine;
 namespace EternalAfternoonHeadTracking
 {
     /// <summary>
-    /// Static loader called from patched Assembly-CSharp.dll.
-    /// Creates the HeadTracking mod GameObject on first call.
-    /// Auto-recreates if destroyed.
+    /// Creates the HeadTracking mod GameObject when the plugin starts, and again if the game
+    /// destroys it.
     /// </summary>
     public static class ModLoader
     {
@@ -24,16 +23,10 @@ namespace EternalAfternoonHeadTracking
         private static int _logCount;
         private const int LogFlushThreshold = 10;
 
-        /// <summary>
-        /// Called from patched Assembly-CSharp.dll entry point.
-        /// Called every frame from Update() - must be fast when already initialized.
-        /// </summary>
         public static void Initialize()
         {
-            // Fast path: already initialized and mod exists - no work needed
             if (_initialized && HeadTrackingMod.Instance != null) return;
 
-            // Slow path: first init or recreation needed
             bool isRecreate = _initialized;
             if (!_initialized)
             {

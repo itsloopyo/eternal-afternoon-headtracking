@@ -14,7 +14,8 @@
   </PropertyGroup>
 
   <!-- Unity references resolve to the stubs `pixi run setup` compiles from the shared
-       sources in cameraunlock-core/csharp/stubs. No game install is read at build time. -->
+       sources in cameraunlock-core/csharp/stubs, and BepInEx to the vendored copy
+       scripts/setup-libs.ps1 extracts. No game install is read at build time. -->
   <PropertyGroup>
     <UnityLibsPath>$(MSBuildThisFileDirectory)libs</UnityLibsPath>
   </PropertyGroup>
@@ -25,8 +26,12 @@
     <ProjectReference Include="..\..\cameraunlock-core\csharp\src\CameraUnlock.Core.Unity\CameraUnlock.Core.Unity.csproj" />
   </ItemGroup>
 
-  <!-- Unity DLLs (resolved via UnityLibsPath) -->
+  <!-- BepInEx from the vendored zip, and Unity DLLs (resolved via UnityLibsPath) -->
   <ItemGroup>
+    <Reference Include="BepInEx">
+      <HintPath>$(UnityLibsPath)\BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="UnityEngine">
       <HintPath>$(UnityLibsPath)\UnityEngine.dll</HintPath>
       <Private>false</Private>

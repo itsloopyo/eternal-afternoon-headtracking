@@ -15,6 +15,7 @@ An unofficial head tracking mod for Eternal Afternoon that moves the view with y
 - [Eternal Afternoon](https://store.steampowered.com/app/3924170/Eternal_Afternoon/) (Steam)
 - [OpenTrack](https://github.com/opentrack/opentrack) or a compatible head tracking app (smartphone, webcam, or dedicated hardware)
 - Windows 10/11 (64-bit)
+- BepInEx 5 x64, included in the standalone installer and provisioned by Lopari
 
 ## Installation
 
@@ -31,22 +32,19 @@ Download [Lopari](https://lopari.app), choose **Eternal Afternoon**, and click
 4. Configure OpenTrack to output UDP to `127.0.0.1:4242`
 5. Launch the game
 
-The installer automatically finds your game via Steam registry lookup and patches `Assembly-CSharp.dll`. No mod loader (BepInEx/MelonLoader) is required. If the installer can't find the game:
+The installer finds your game through Steam and installs the bundled BepInEx 5 if the game does not already have it. If the installer can't find the game:
 
 - Set the `ETERNALAFTERNOON_PATH` environment variable to your game folder, or
 - Run from command prompt: `install.cmd "D:\Games\Eternal Afternoon"`
 
 ### Manual Installation
 
-If you prefer to place files by hand, or you grabbed the `-nexus` package:
+1. Install [BepInEx 5 x64](https://github.com/BepInEx/BepInEx/releases) into the Eternal Afternoon game folder.
+2. Run the game once so BepInEx creates its folders.
+3. From the installer ZIP's `plugins\` folder, copy `EternalAfternoonHeadTracking.dll`, `CameraUnlock.Core.dll` and `CameraUnlock.Core.Unity.dll` into `Eternal Afternoon\BepInEx\plugins\`. If you have the Nexus ZIP instead, extract it into the game folder; it already contains the `BepInEx\plugins\` layout.
+4. Configure your tracker to output UDP to `127.0.0.1:4242`, then launch the game.
 
-1. Run `install.cmd` at least once against any copy of the game so `Assembly-CSharp.dll` gets patched (the mod is loaded via IL injection into that assembly, not via a separate mod loader)
-2. Extract the Nexus ZIP into your game folder - the DLLs will land in `Eternal Afternoon_Data/Managed/`:
-   - `EternalAfternoonHeadTracking.dll`
-   - `CameraUnlock.Core.dll`
-   - `CameraUnlock.Core.Unity.dll`
-3. Configure your tracker to output UDP to `127.0.0.1:4242`
-4. Launch the game
+After launch, `Eternal Afternoon\BepInEx\LogOutput.log` should contain `Loading [Eternal Afternoon Head Tracking`.
 
 ## Setting Up OpenTrack
 
@@ -240,16 +238,13 @@ YawModeKey=default
 ## Troubleshooting
 
 **Mod not loading:**
-- Check `HeadTracking_BOOT.log` in `Eternal Afternoon_Data/Managed/` for bootstrap messages
-- Check `HeadTracking_BOOT_ERROR.log` in your temp folder (`%TEMP%`) for bootstrap errors
-- Check `HeadTracking.log` in the Managed folder for mod errors. This is the
-  main log: it records the port it listened on and an `OpenTrack connected` line
-  the moment the first tracker packet arrives. Send this file when reporting a
-  problem.
-- Verify game files through Steam and re-run `install.cmd`
-
-All three logs are rewritten from scratch on every game launch, so they only ever
-contain the most recent session.
+- Check `Eternal Afternoon\BepInEx\LogOutput.log` for `Loading [Eternal Afternoon Head Tracking`. If it is missing, BepInEx did not load the plugin: confirm the three DLLs listed under Manual Installation are in `BepInEx\plugins\`, and that BepInEx is **5 x64**.
+- Check `HeadTracking.log` in `BepInEx\plugins\` for mod errors. This is the
+  mod's own log: it records the port it listened on and an `OpenTrack connected`
+  line the moment the first tracker packet arrives. Send this file when reporting
+  a problem. It is rewritten from scratch on every game launch, so it only ever
+  holds the most recent session.
+- Re-run `install.cmd` if the BepInEx folders are missing.
 
 **No tracking response:**
 - Verify OpenTrack is running and outputting data
@@ -276,19 +271,13 @@ contain the most recent session.
 
 ## Updating
 
-Download the new release and run `install.cmd` again. Your settings are preserved.
+For a standalone installation, download the new installer ZIP, extract it, and run its `install.cmd`. Your `CameraUnlock.ini` is preserved. For a manual installation, replace the three plugin DLLs with those from the new release.
 
 ## Uninstalling
 
-Run `uninstall.cmd` from the release folder. This removes the mod DLLs and restores `Assembly-CSharp.dll` from its `.original` backup. It leaves `CameraUnlock.ini` in place, so your settings survive a reinstall. No mod loader to remove - this mod patches `Assembly-CSharp.dll` directly rather than shipping BepInEx or MelonLoader.
+For a standalone installation, run `uninstall.cmd`. This removes the mod DLLs and leaves `CameraUnlock.ini` in place, so your settings survive a reinstall. BepInEx is only removed if the installer put it there; `uninstall.cmd /force` also removes a BepInEx installation that was already there. Removing BepInEx removes its plugins and config folders too, so if other mods use it, use the manual steps below.
 
-If something is stuck, use:
-
-```
-uninstall.cmd /force
-```
-
-to remove everything the installer touched regardless of the state file.
+For a manual uninstall, remove `EternalAfternoonHeadTracking.dll`, `CameraUnlock.Core.dll` and `CameraUnlock.Core.Unity.dll` from `Eternal Afternoon\BepInEx\plugins\`. Keep the shared CameraUnlock DLLs if another mod uses them. Your settings are in `Eternal Afternoon_Data\Managed\CameraUnlock.ini`; delete it too to remove them. Keep BepInEx if other mods need it.
 
 ## Building from Source
 
@@ -297,7 +286,8 @@ to remove everything the installer touched regardless of the state file.
 - Windows 10/11
 - [.NET SDK 8.0+](https://dotnet.microsoft.com/download)
 - [pixi](https://pixi.sh) task runner
-- Eternal Afternoon installed via Steam (for Unity reference DLLs)
+
+The build needs no game install: it compiles against Unity reference stubs built from the cameraunlock-core submodule and takes BepInEx from the vendored copy in `vendor/bepinex/`.
 
 ### Build
 
@@ -329,7 +319,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 - [Alex Klexber](https://store.steampowered.com/app/3924170/Eternal_Afternoon/) - Eternal Afternoon
 - [OpenTrack](https://github.com/opentrack/opentrack) - Head tracking protocol and software
-- [Mono.Cecil](https://github.com/jbevain/cecil) - .NET assembly manipulation (used for install-time IL injection)
+- [BepInEx](https://github.com/BepInEx/BepInEx) - Unity plugin framework
 
 ## Disclaimer
 

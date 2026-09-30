@@ -1,16 +1,19 @@
 [workspace]
 name = "eternal-afternoon-head-tracking"
 version = "1.0.0"
-description = "Head tracking mod for Eternal Afternoon with aim decoupling"
+description = "Head tracking mod for Eternal Afternoon, a BepInEx 5 plugin"
 channels = ["conda-forge"]
 platforms = ["win-64"]
 
 [tasks]
 update-submodule = "git submodule update --remote cameraunlock-core && powershell -NoProfile -ExecutionPolicy Bypass -File cameraunlock-core/scripts/update-submodule.ps1"
 sync = "git submodule update --remote cameraunlock-core"
+# BepInEx.dll and 0Harmony.dll out of the committed vendor zip.
+setup-loader = "powershell -ExecutionPolicy Bypass -File scripts/setup-libs.ps1"
 # Unity reference stubs, compiled from the shared sources in the core submodule so
-# every mod builds against one copy of them. Nothing here reads a game install.
-setup = "powershell -ExecutionPolicy Bypass -File cameraunlock-core/csharp/stubs/build-unity-stubs.ps1 -OutputPath src/EternalAfternoonHeadTracking/libs -TargetFramework net48"
+# every mod builds against one copy of them. Runs after setup-loader, which clears
+# libs/ before repopulating it. Nothing here reads a game install.
+setup = { cmd = "powershell -ExecutionPolicy Bypass -File cameraunlock-core/csharp/stubs/build-unity-stubs.ps1 -OutputPath src/EternalAfternoonHeadTracking/libs -TargetFramework net48", depends-on = ["setup-loader"] }
 restore = { cmd = "dotnet restore src/EternalAfternoonHeadTracking/EternalAfternoonHeadTracking.csproj", depends-on = ["setup"] }
 build = { cmd = "dotnet build src/EternalAfternoonHeadTracking/EternalAfternoonHeadTracking.csproj -c Release", depends-on = ["restore"] }
 # Checks that every member reference the build emits resolves against the
@@ -28,13 +31,12 @@ test = { depends-on = ["test-unit", "test-differential"] }
 # a default, then the per_game of launcher-manifest.json's config descriptor. The render test
 # compares the two on every `pixi run test-unit`, so the committed file cannot drift from the code.
 render-config = { cmd = "dotnet test tests/EternalAfternoonHeadTracking.Tests/EternalAfternoonHeadTracking.Tests.csproj -c Release --filter FullyQualifiedName~RenderTests.CommittedFileIsTheRenderedDefaults && node cameraunlock-core/scripts/encode-seed.mjs", env = { CAMERAUNLOCK_RENDER_CONFIG = "write" }, depends-on = ["build"] }
-# Bump vendored mod-loader copies to latest upstream within pinned range.
+# Bump vendored BepInEx to latest upstream within the pinned range.
 # Manual; commit the result. CI does not run this.
 update-deps = "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/update-deps.ps1"
 install = { cmd = "powershell -ExecutionPolicy Bypass -File scripts/deploy.ps1 Release", depends-on = ["build"] }
 package = { cmd = "powershell -ExecutionPolicy Bypass -File scripts/package-release.ps1", depends-on = ["test-unit"] }
 uninstall = "scripts\\uninstall.cmd"
-vanilla = "powershell -ExecutionPolicy Bypass -File scripts/vanilla.ps1"
 clean = "dotnet clean src/EternalAfternoonHeadTracking/EternalAfternoonHeadTracking.csproj"
 release = "powershell -ExecutionPolicy Bypass -File scripts/release.ps1"
 # Checks the launcher contract against the built installer ZIP, the Nexus ZIP's contents included.

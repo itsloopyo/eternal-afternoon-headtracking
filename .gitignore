@@ -8,9 +8,6 @@ obj/
 
 # NuGet
 packages/
-*.nupkg
-# But vendored nupkgs are committed - they are the install-time source of truth.
-!vendor/**/*.nupkg
 
 # Release packaging
 dist/
@@ -44,9 +41,6 @@ mcp.json
 
 # Installer state (written into game dir by install.cmd, but guard the repo too)
 .headtracking-state.json
-
-# Tools (downloaded on demand by ensure-cecil.ps1)
-tools/*.dll
 
 # OS
 .DS_Store

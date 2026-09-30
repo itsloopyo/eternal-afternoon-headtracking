@@ -1,12 +1,8 @@
 #!/usr/bin/env pwsh
 #Requires -Version 5.1
-# Bump vendored Mono.Cecil package to the latest pinned version. Manual: dev
-# runs this when they want a fresh upstream bump, then commits the result.
-# CI never refreshes. See ~/.claude/CLAUDE.md "Vendoring Third-Party Dependencies".
-#
-# Mono.Cecil has no GitHub release assets (jbevain/cecil only publishes source
-# tags), so we pin the NuGet package directly via DirectUrl. Bumping the
-# version is a deliberate edit to $cecilVersion below.
+# Bump vendored BepInEx x64 to the latest upstream within the pinned range and
+# rewrite vendor/bepinex/{LICENSE,README.md}. Manual: dev runs this when they
+# want a fresh upstream bump, then commits the result. CI never refreshes.
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -21,16 +17,15 @@ if (-not (Test-Path $module)) {
 }
 Import-Module $module -Force
 
-$cecilVersion = '0.11.5'
-$out          = Join-Path $projectDir 'vendor/mono-cecil'
-$outputFile   = "Mono.Cecil.$cecilVersion.nupkg"
-
+$out = Join-Path $projectDir 'vendor/bepinex'
 Update-VendoredLoader `
-    -Name 'mono-cecil' `
+    -Name 'bepinex' `
     -OutputDir $out `
-    -OutputFileName $outputFile `
-    -DirectUrl "https://www.nuget.org/api/v2/package/Mono.Cecil/$cecilVersion" `
-    -LicenseUrl 'https://raw.githubusercontent.com/jbevain/cecil/master/LICENSE.txt' | Out-Null
+    -OutputFileName 'BepInEx_win_x64.zip' `
+    -Owner 'BepInEx' -Repo 'BepInEx' `
+    -VersionPrefix 'v5.4.' `
+    -AssetPattern '^BepInEx_win_x64_.*\.zip$' `
+    -LicenseUrl 'https://raw.githubusercontent.com/BepInEx/BepInEx/master/LICENSE' | Out-Null
 
 Write-Host ""
-Write-Host "vendor/mono-cecil refreshed (Mono.Cecil $cecilVersion). Review and commit." -ForegroundColor Green
+Write-Host "vendor/bepinex refreshed. Review and commit." -ForegroundColor Green
